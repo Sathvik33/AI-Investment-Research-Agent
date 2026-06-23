@@ -15,6 +15,8 @@ export async function webSearchTool(query: string, maxResults = 5): Promise<Sear
 }
 
 async function runTavilySearch(query: string, maxResults: number): Promise<SearchResult[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
     const response = await fetch('https://api.tavily.com/search', {
       method: 'POST',
@@ -25,8 +27,10 @@ async function runTavilySearch(query: string, maxResults: number): Promise<Searc
         search_depth: "basic",
         include_answer: false,
         max_results: maxResults
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     if (!response.ok) throw new Error(`Tavily error: ${response.statusText}`);
     const data = await response.json();
     return data.results.map((r: any) => ({
@@ -35,16 +39,21 @@ async function runTavilySearch(query: string, maxResults: number): Promise<Searc
       content: r.content
     }));
   } catch (error) {
+    clearTimeout(timeoutId);
     console.warn("Tavily search failed, falling back to DDG", error);
     return runDuckDuckGoSearch(query, maxResults);
   }
 }
 
 async function runDuckDuckGoSearch(query: string, maxResults: number): Promise<SearchResult[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
     const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     if (!response.ok) throw new Error(`DDG error: ${response.statusText}`);
     const html = await response.text();
     const $ = cheerio.load(html);
@@ -68,6 +77,7 @@ async function runDuckDuckGoSearch(query: string, maxResults: number): Promise<S
     });
     return results;
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("DDG search error:", error);
     return [];
   }

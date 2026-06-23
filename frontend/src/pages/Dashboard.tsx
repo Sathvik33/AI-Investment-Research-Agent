@@ -283,8 +283,8 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
       {/* MIDDLE: Main Content - Report & Chat */}
       <div className="flex-1 flex flex-col h-full overflow-hidden border-l border-[#2d3748] pl-6">
         {report ? (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto pr-4 pb-4">
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-4 pb-4">
               <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold text-emerald-400">Final Trade Decision</h1>
                 <div className="flex items-baseline gap-4 border border-[#2d3748] bg-[#22252e] px-4 py-2 rounded-xl">
@@ -355,92 +355,94 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
 
       {/* RIGHT: Trading Strategy & Graph */}
       {report && (
-        <div className="w-[350px] lg:w-[400px] shrink-0 flex flex-col gap-6 h-full overflow-y-auto pr-2 pl-4 border-l border-[#2d3748]">
-          
-          <div className="border border-[#2d3748] bg-[#22252e] rounded-xl p-5 shadow-lg">
-            <h3 className="text-slate-100 font-bold mb-4 flex items-center gap-2">
-              <TrendingUp size={18} className="text-emerald-500" /> Market Action
-            </h3>
-            <div className="h-48 w-full">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="date" hide />
-                    <YAxis domain={['auto', 'auto']} hide />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a1c23', border: '1px solid #2d3748', borderRadius: '8px' }}
-                      itemStyle={{ color: '#10b981' }}
-                    />
-                    <Line type="monotone" dataKey="price" stroke="#10b981" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
-                  Loading chart...
+        <div className="w-[350px] lg:w-[400px] shrink-0 flex flex-col h-full overflow-hidden border-l border-[#2d3748] pl-4">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-2 pb-8">
+            <div className="flex flex-col gap-6">
+              <div className="border border-[#2d3748] bg-[#22252e] rounded-xl p-5 shadow-lg">
+                <h3 className="text-slate-100 font-bold mb-4 flex items-center gap-2">
+                  <TrendingUp size={18} className="text-emerald-500" /> Market Action
+                </h3>
+                <div className="h-48 w-full">
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <XAxis dataKey="date" hide />
+                        <YAxis domain={['auto', 'auto']} hide />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1a1c23', border: '1px solid #2d3748', borderRadius: '8px' }}
+                          itemStyle={{ color: '#10b981' }}
+                        />
+                        <Line type="monotone" dataKey="price" stroke="#10b981" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
+                      Loading chart...
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            {quoteData && (
-              <div className="flex items-center justify-between text-sm mt-4 pt-4 border-t border-[#2d3748]">
-                <div>
-                  <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Current</p>
-                  <p className="font-bold text-slate-100 text-lg">${quoteData.regularMarketPrice?.toFixed(2)}</p>
+                
+                {quoteData && (
+                  <div className="flex items-center justify-between text-sm mt-4 pt-4 border-t border-[#2d3748]">
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Current</p>
+                      <p className="font-bold text-slate-100 text-lg">${quoteData.regularMarketPrice?.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Open</p>
+                      <p className="font-bold text-slate-100">${quoteData.regularMarketOpen?.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Prev Close</p>
+                      <p className="font-bold text-slate-100">${quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-[#2d3748] bg-[#22252e] rounded-xl overflow-hidden shadow-lg">
+                <div className="bg-[#1e2128] p-4 border-b border-[#2d3748]">
+                  <h3 className="text-slate-100 font-bold flex items-center gap-2">
+                    <Target size={18} className="text-emerald-500" /> Trading Strategy
+                  </h3>
                 </div>
-                <div>
-                  <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Open</p>
-                  <p className="font-bold text-slate-100">${quoteData.regularMarketOpen?.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Prev Close</p>
-                  <p className="font-bold text-slate-100">${quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
+                
+                <div className="p-5 space-y-5">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Entry Point</p>
+                    <p className="text-emerald-400 font-medium bg-emerald-500/10 px-3 py-2 rounded-lg border border-emerald-500/20">
+                      {strategy.entryPoint || 'Review current market conditions'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Exit / Target</p>
+                    <p className="text-rose-400 font-medium bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/20">
+                      {strategy.exitPoint || 'Set dynamic trailing stop'}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#2d3748]">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
+                      <AlertTriangle size={14} /> Short-term Strategy
+                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {strategy.shortTermStrategy || 'Hold and monitor key catalysts.'}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#2d3748]">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
+                      <ShieldCheck size={14} /> Long-term Strategy
+                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {strategy.longTermStrategy || 'Evaluate quarterly performance before adding to position.'}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-
-          <div className="border border-[#2d3748] bg-[#22252e] rounded-xl overflow-hidden shadow-lg">
-            <div className="bg-[#1e2128] p-4 border-b border-[#2d3748]">
-              <h3 className="text-slate-100 font-bold flex items-center gap-2">
-                <Target size={18} className="text-emerald-500" /> Trading Strategy
-              </h3>
-            </div>
-            
-            <div className="p-5 space-y-5">
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Entry Point</p>
-                <p className="text-emerald-400 font-medium bg-emerald-500/10 px-3 py-2 rounded-lg border border-emerald-500/20">
-                  {strategy.entryPoint || 'Review current market conditions'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Exit / Target</p>
-                <p className="text-rose-400 font-medium bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/20">
-                  {strategy.exitPoint || 'Set dynamic trailing stop'}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#2d3748]">
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
-                  <AlertTriangle size={14} /> Short-term Strategy
-                </p>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  {strategy.shortTermStrategy || 'Hold and monitor key catalysts.'}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#2d3748]">
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
-                  <ShieldCheck size={14} /> Long-term Strategy
-                </p>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  {strategy.longTermStrategy || 'Evaluate quarterly performance before adding to position.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
         </div>
       )}
 

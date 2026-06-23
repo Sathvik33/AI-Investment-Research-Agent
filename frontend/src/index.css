@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html, body, #root {
+  @apply h-screen w-screen overflow-hidden;
+}
+
 body {
   @apply bg-[#1a1c23] text-slate-300;
 }

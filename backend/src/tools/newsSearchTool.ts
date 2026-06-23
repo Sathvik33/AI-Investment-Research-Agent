@@ -1,40 +1,27 @@
 import { NewsFindings } from "../graph/state";
+import YF from 'yahoo-finance2';
+
+const yahooFinance = new (YF as any)({ suppressNotices: ['yahooSurvey'] });
 
 export async function newsSearchTool(query: string): Promise<string[]> {
-  const apiKey = process.env.NEWSAPI_KEY;
-  if (!apiKey || apiKey === 'your_newsapi_key') {
-    console.warn("NewsAPI key missing, returning mocked news data for", query);
+  try {
+    const results = await yahooFinance.search(query, { newsCount: 5 }) as any;
+    
+    if (!results.news || results.news.length === 0) {
+       console.warn(`No news found for ${query} on Yahoo Finance.`);
+       return [];
+    }
+
+    return results.news.map((article: any) => 
+       `${article.title} (Published by ${article.publisher}) - ${article.link}`
+    );
+  } catch (error: any) {
+    console.error(`Error fetching news for ${query}:`, error.message);
+    console.warn("Falling back to mocked news data due to API error.");
     return [
       `Recent news about ${query} suggests positive growth.`,
       `${query} announced a new product line recently.`,
       `Market analysts are optimistic about ${query}'s future.`
     ];
-  }
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    // Sort by relevancy to get the most relevant news
-    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=relevancy&pageSize=5&apiKey=${apiKey}`;
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`NewsAPI error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.articles || data.articles.length === 0) {
-       return [];
-    }
-
-    return data.articles.map((article: any) => 
-       `${article.title} - ${article.description}`
-    );
-  } catch (error: any) {
-    console.error(`Error fetching news for ${query}:`, error.message);
-    throw new Error(`News fetch failed: ${error.message}`);
   }
 }

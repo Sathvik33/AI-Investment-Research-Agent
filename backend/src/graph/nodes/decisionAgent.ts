@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const DecisionSchema = z.object({
   verdict: z.enum(["INVEST", "PASS"]).describe("The final investment verdict"),
-  confidence: z.number().min(0).max(1).describe("Confidence in the verdict from 0 to 1"),
+  confidence: z.number().min(0).max(100).describe("Confidence in the verdict as a decimal between 0.0 and 1.0 (e.g. 0.85, NOT 85)"),
   reasoning: z.string().describe("Detailed paragraph explaining the reasoning behind the verdict"),
   keyRisks: z.array(z.string()).describe("List of key risks associated with this investment"),
   keyOpportunities: z.array(z.string()).describe("List of key opportunities or bullish factors"),
@@ -16,7 +16,6 @@ const DecisionSchema = z.object({
 
 export const decisionAgent = async (state: ResearchState): Promise<Partial<ResearchState>> => {
   console.log('Running decisionAgent...');
-  
   const llm = getLLM();
   if (!llm) {
     return { 
@@ -70,6 +69,9 @@ Provide the verdict, your confidence level, this detailed markdown reasoning, ke
   
   try {
     const result = await modelWithStructure.invoke(prompt);
+    if (result.confidence > 1) {
+      result.confidence = result.confidence / 100;
+    }
     return { decision: result };
   } catch (error: any) {
     console.error("Error in decisionAgent:", error);
