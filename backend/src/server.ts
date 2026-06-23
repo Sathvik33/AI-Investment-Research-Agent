@@ -9,9 +9,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
-const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-
-app.use(cors({ origin }));
+app.use(cors()); // Allow all origins for Vercel deployment
 app.use(express.json());
 
 // Routes
