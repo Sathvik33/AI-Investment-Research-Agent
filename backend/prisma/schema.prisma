@@ -1,0 +1,94 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  domain      String?
+  ticker      String?
+  industry    String?
+  isPublic    Boolean  @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  runs        ResearchRun[]
+
+  @@map("companies")
+}
+
+model ResearchRun {
+  id           String    @id @default(uuid())
+  companyId    String    @map("company_id")
+  sessionId    String?   @map("session_id")
+  status       String    // e.g., "running", "completed", "failed"
+  currentNode  String?   @map("current_node")
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+
+  company      Company   @relation(fields: [companyId], references: [id])
+  findings     ResearchFinding[]
+  reports      Report[]
+  messages     Message[]
+  embeddings   ReportEmbedding[]
+
+  @@map("research_runs")
+}
+
+model ResearchFinding {
+  id         String      @id @default(uuid())
+  runId      String      @map("run_id")
+  sourceType String      @map("source_type") // e.g., "web", "financial", "news", "competitor"
+  payload    Json
+  citations  Json
+
+  run        ResearchRun @relation(fields: [runId], references: [id])
+
+  @@map("research_findings")
+}
+
+model Report {
+  id               String      @id @default(uuid())
+  runId            String      @map("run_id")
+  verdict          String      // "INVEST" | "PASS"
+  confidence       Float
+  reasoning        String
+  scores           Json
+  keyRisks         Json        @map("key_risks")
+  keyOpportunities Json        @map("key_opportunities")
+  tradingStrategy  Json?       @map("trading_strategy")
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  run              ResearchRun @relation(fields: [runId], references: [id])
+
+  @@map("reports")
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  runId     String      @map("run_id")
+  role      String      // "user" | "assistant"
+  content   String
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  run       ResearchRun @relation(fields: [runId], references: [id])
+
+  @@map("messages")
+}
+
+model ReportEmbedding {
+  id         String      @id @default(uuid())
+  runId      String      @map("run_id")
+  embedding  Unsupported("vector(1536)")?
+  chunkText  String      @map("chunk_text")
+
+  run        ResearchRun @relation(fields: [runId], references: [id])
+
+  @@map("report_embeddings")
+}
