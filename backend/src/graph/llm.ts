@@ -1,9 +1,17 @@
-import { ChatOllama } from "@langchain/ollama";
+import { ChatGroq } from "@langchain/groq";
+import * as dotenv from "dotenv";
 
-export const getLLM = (modelName: string = "qwen2.5:7b") => {
-  return new ChatOllama({
-    baseUrl: "http://localhost:11434", // Default local Ollama URL
+dotenv.config();
+
+export const getLLM = (modelName: string = "llama-3.3-70b-versatile") => {
+  if (!process.env.GROQ_API_KEY) {
+    console.error("GROQ_API_KEY is missing. Please add it to your .env file.");
+    return null;
+  }
+  return new ChatGroq({
+    apiKey: process.env.GROQ_API_KEY,
     model: modelName,
-    temperature: 0,
+    temperature: 0.2,
+    maxRetries: 2,
   });
 };

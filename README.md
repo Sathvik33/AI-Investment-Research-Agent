@@ -1,78 +1,225 @@
-# AI Investment Research Agent
+<div align="center">
 
-A full-stack, multi-agent AI pipeline built to perform deep fundamental, news, and competitor analysis on a given company and produce a final INVEST or PASS decision with reasoning and confidence scores.
+<br/>
 
-## Architecture & Tech Stack
+# ?? AI Investment Research Agent
 
-**Backend**
-- Node.js, Express, TypeScript
-- **LangGraph** (`@langchain/langgraph`) for stateful orchestration of the multi-agent system.
-- **Anthropic Claude 3.5 Sonnet** as the core reasoning engine.
-- **PostgreSQL** + **Prisma ORM** for persistence and Long-term memory.
-- **pgvector** for conversational memory and follow-up Q&A retrieval.
-- Server-Sent Events (SSE) for real-time streaming of pipeline progress.
-- External tools: Tavily (Web Search), Alpha Vantage (Financials), NewsAPI (News & Sentiment).
+### *A fully autonomous, multi-agent hedge fund analyst � powered by LangGraph & local LLMs*
 
-**Frontend**
-- React, Vite, TypeScript
-- Tailwind CSS for modern, dashboard-like styling.
-- Recharts for data visualization.
+<br/>
 
----
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs)
+[![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 
-## Setup & Local Development
+<br/>
 
-### 1. Prerequisites
-- Node.js (v18+)
-- Docker (for local Postgres setup)
+> **Type a company name. Watch 9 specialized AI agents collaborate in real-time. Get an institutional-grade investment report in minutes � for free, with zero rate limits.**
 
-### 2. Backend Setup
-1. Navigate to `backend/`
-2. Run `npm install`
-3. Start the local database: `docker-compose up -d`
-4. Copy environment variables: `cp .env.example .env` and fill in your API keys (Anthropic, Tavily, Alpha Vantage, NewsAPI).
-5. Apply database migrations and generate Prisma client:
-   ```bash
-   npx prisma migrate dev
-   ```
-   *(Note: The initial migration includes the setup for `pgvector`.)*
-6. Start the server:
-   ```bash
-   npm run dev
-   ```
-   *The backend will run on `http://localhost:4000`.*
-
-### 3. Frontend Setup
-1. Navigate to `frontend/`
-2. Run `npm install`
-3. Ensure `.env` or `.env.local` is set with `VITE_API_URL=http://localhost:4000/api` (if running backend on a different port).
-4. Start the Vite dev server:
-   ```bash
-   npm run dev
-   ```
-   *The frontend will run on `http://localhost:5173`.*
+<br/>
 
 ---
 
-## Deployment Strategy
+</div>
 
-### Why not Vercel for Backend?
-Vercel's serverless functions have strict execution timeout limits (typically 10-60 seconds depending on the plan). LangGraph agent pipelines, web scraping, and multiple LLM calls can easily take several minutes. Furthermore, Server-Sent Events (SSE) for real-time progress updates require long-lived connections which do not play well with standard serverless function limitations. 
+## ? What Is This?
 
-Therefore, the backend is designed to be deployed on a platform supporting long-running Node.js processes, such as **Render**.
+**AI Investment Research Agent** is a production-grade agentic application that simulates a Wall Street research desk. Instead of a single chatbot, it deploys a **graph of specialized AI agents** � each with a distinct role � that run in parallel, debate each other, self-reflect on their confidence, and deliver a final INVEST or PASS verdict backed by deep, structured reasoning.
 
-### Backend Deployment (Render)
-1. Use the provided `render.yaml` configuration file (or create a Web Service manually).
-2. Set the `Build Command` to `npm install && npx prisma generate && npx tsc`.
-3. Set the `Start Command` to `node dist/server.js`.
-4. Ensure all environment variables (including `DATABASE_URL` pointing to Neon) are added to the Render dashboard.
+The entire pipeline runs **100% locally** on your machine using [Ollama](https://ollama.ai/) and `qwen2.5:7b`, giving you **infinite, rate-limit-free** generations with no cloud costs � or you can plug in a [Groq](https://console.groq.com/) API key for blazing cloud-speed.
 
-### Database Deployment (Neon)
-1. Create a project on Neon.tech.
-2. The agent requires the `pgvector` extension. Neon supports this natively.
-3. Run `npx prisma migrate deploy` in your CI/CD pipeline or manually to push the schema to Neon.
+---
 
-### Frontend Deployment (Vercel)
-1. Use the provided `vercel.json` (if any routing overrides are needed) or simply connect the GitHub repo.
-2. Ensure the Framework Preset is set to Vite.
-3. Set the Environment Variable `VITE_API_URL` to point to the deployed Render backend URL.
+## ?? Live Pipeline
+
+```
+User types: "Infosys"
+     �
+     ?
+[resolveEntity] ? Finds ticker, legal name & industry via LLM + web search
+     �
+     +------------------------------------------------------------------+
+     ?                          ?                        ?              ?
+[webResearchAgent]   [financialDataAgent]   [newsSentimentAgent]  [competitorAgent]
+  Web scraping +      Yahoo Finance API      News NLP + scoring     Rival analysis
+  business summary    live fundamentals      bullish/bearish         top 3-5 rivals
+     �                          �                        �              �
+     +------------------------------------------------------------------+
+                                         ?
+                                   [aggregator]  ? Synthesizes unified research brief
+                                         ?
+                                  [analystAgent]  ? Scores company across 5 dimensions
+                                         ?
+                                [reflectionAgent] --- confidence < 60%? ---? loop back
+                                         �
+                                         ?
+                                 [decisionAgent]  ? 3-persona debate: Risky vs Safe vs Neutral
+                                         ?
+                                [reportGenerator] ? Persists to PostgreSQL, streams to UI
+```
+
+---
+
+## ?? Key Features
+
+| Feature | Description |
+|---|---|
+| ?? **9 Specialized AI Agents** | Each agent has a single, focused responsibility � no monolithic prompts |
+| ?? **Parallel Fan-Out Architecture** | 4 research agents run simultaneously, dramatically cutting pipeline time |
+| ?? **Self-Reflection Loop** | The `reflectionAgent` re-triggers research if confidence falls below 60% |
+| ????? **3-Persona Debate Engine** | Risky, Safe, and Neutral analyst personas debate before issuing a verdict |
+| ?? **Live Stock Chart** | Real-time price chart pulled from Yahoo Finance via `yahoo-finance2` |
+| ?? **Multi-Currency Support** | Automatically detects INR (?), EUR (�), GBP (�) for international stocks |
+| ?? **Follow-up Chat** | Conversational Q&A backed by the full research brief as context |
+| ??? **100% Local LLM** | Powered by Ollama + `qwen2.5:7b` � no internet, no rate limits, no API costs |
+| ?? **Groq Cloud Mode** | Swap to `llama-3.3-70b-versatile` on Groq with a single env variable change |
+| ? **Real-time SSE Streaming** | Agent progress streams live to the frontend via Server-Sent Events |
+| ??? **Persistent Reports** | All reports stored in PostgreSQL via Prisma � browse your full history |
+
+---
+
+## ??? Tech Stack
+
+### Backend
+- **Runtime**: Node.js + TypeScript + `ts-node-dev`
+- **AI Orchestration**: [LangGraph.js](https://github.com/langchain-ai/langgraphjs)
+- **LLM Providers**: [Ollama](https://ollama.ai/) (`qwen2.5:7b`) or [Groq](https://console.groq.com/) (`llama-3.3-70b-versatile`)
+- **Web Search**: [Tavily API](https://tavily.com/) � grounded, citation-backed search
+- **Financial Data**: `yahoo-finance2` � live price charts and fundamentals
+- **Database**: PostgreSQL (via [Neon](https://neon.tech/)) + [Prisma ORM](https://www.prisma.io/) + `pgvector`
+- **API Server**: Express.js with SSE streaming
+
+### Frontend
+- **Framework**: React 18 + TypeScript + [Vite](https://vitejs.dev/)
+- **Routing**: React Router v7
+- **Styling**: Tailwind CSS � dark mode, glassmorphism
+- **Charts**: [Recharts](https://recharts.org/) � interactive stock price visualization
+- **Markdown**: `react-markdown` � rich report rendering
+
+---
+
+## ?? Getting Started
+
+### Prerequisites
+
+- **Node.js** v18+
+- **Ollama** � [Download here](https://ollama.ai/)
+- **PostgreSQL** database � [Neon free tier](https://neon.tech/) recommended
+- **Tavily API Key** � [Get one free](https://tavily.com/) (1,000 searches/month)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Sathvik33/AI-Investment-Research-Agent.git
+cd AI-Investment-Research-Agent
+```
+
+### 2. Pull the local AI model
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+### 3. Configure the backend
+
+```bash
+cd backend
+cp .env.example .env
+# Fill in your DATABASE_URL and TAVILY_API_KEY
+```
+
+### 4. Install dependencies and run migrations
+
+```bash
+# Backend
+cd backend && npm install && npx prisma migrate deploy
+
+# Frontend
+cd ../frontend && npm install
+```
+
+### 5. Launch
+
+```bash
+# Terminal 1
+cd backend && npm run dev
+
+# Terminal 2
+cd frontend && npm run dev
+```
+
+Open **http://localhost:5173** and type any company name!
+
+---
+
+## ?? Switching LLM Provider
+
+Edit one file: [`backend/src/graph/llm.ts`](./backend/src/graph/llm.ts)
+
+**Local Ollama (default � free, unlimited):**
+```typescript
+import { ChatOllama } from "@langchain/ollama";
+export const getLLM = () => new ChatOllama({ baseUrl: "http://localhost:11434", model: "qwen2.5:7b", temperature: 0 });
+```
+
+**Groq Cloud (fast, requires API key):**
+```typescript
+import { ChatGroq } from "@langchain/groq";
+export const getLLM = () => new ChatGroq({ apiKey: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile", temperature: 0 });
+```
+
+---
+
+## ?? Agent Roles
+
+| Agent | Role | Output |
+|---|---|---|
+| `resolveEntity` | Disambiguates name ? ticker, legal name, industry | `resolvedEntity` |
+| `webResearchAgent` | Scrapes & summarizes business overview + news | `webResearch` |
+| `financialDataAgent` | Pulls live financials from Yahoo Finance | `financialData` |
+| `newsSentimentAgent` | Scores headlines bullish/bearish | `newsSentiment` |
+| `competitorAgent` | Identifies top 3�5 market rivals | `competitors` |
+| `aggregator` | Synthesizes all research into a unified brief | `researchBrief` |
+| `analystAgent` | Scores 5 dimensions: Health, Growth, Moat, Sentiment, Risk | `scores` |
+| `reflectionAgent` | Reviews confidence; loops back if below 60% | routing |
+| `decisionAgent` | 3-persona debate ? INVEST/PASS verdict + strategy | `decision` |
+| `reportGenerator` | Persists to DB, streams final report to UI | database write |
+
+---
+
+## ?? Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ? | PostgreSQL connection string |
+| `TAVILY_API_KEY` | ? | Tavily web search API key |
+| `GROQ_API_KEY` | ? Optional | Required only for Groq cloud mode |
+| `PORT` | No | Backend port (default: `4000`) |
+| `FRONTEND_ORIGIN` | No | CORS origin (default: `http://localhost:5173`) |
+
+---
+
+## ?? Recommended Local Models
+
+| VRAM | Model | Command |
+|---|---|---|
+| 4 GB | Phi-3 Mini | `ollama pull phi3` |
+| 6 GB | Qwen 2.5 7B ? | `ollama pull qwen2.5:7b` |
+| 8 GB | Llama 3.1 8B | `ollama pull llama3.1` |
+| 16 GB+ | Qwen 2.5 14B | `ollama pull qwen2.5:14b` |
+
+> **Recommended:** `qwen2.5:7b` � best-in-class tool calling, JSON formatting, and reasoning in its weight class.
+
+---
+
+<div align="center">
+
+Built with ?? using LangGraph, Ollama, and React
+
+*Type a company. Get alpha.*
+
+</div>

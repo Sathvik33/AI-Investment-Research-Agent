@@ -225,7 +225,7 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
     <div className="flex h-full bg-[#1a1c23] text-slate-300 font-sans overflow-hidden gap-6">
       
       {/* LEFT: Progress Sidebar */}
-      <div className="w-96 shrink-0 flex flex-col h-full bg-[#1a1c23] pr-2 pb-4 overflow-y-auto hidden md:flex">
+      <div className="w-72 shrink-0 hidden md:flex flex-col h-full bg-[#1a1c23] pr-2 pb-4 overflow-y-auto">
         <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors mb-6 pb-4 border-b border-[#2d3748]">
           <ArrowLeft size={16} /> <span className="font-semibold tracking-wider text-sm uppercase">Dashboard</span>
         </button>
@@ -382,22 +382,25 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
                   )}
                 </div>
                 
-                {quoteData && (
-                  <div className="flex items-center justify-between text-sm mt-4 pt-4 border-t border-[#2d3748]">
-                    <div>
-                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Current</p>
-                      <p className="font-bold text-slate-100 text-lg">${quoteData.regularMarketPrice?.toFixed(2)}</p>
+                {quoteData && (() => {
+                  const sym = quoteData.currency === 'INR' ? '₹' : (quoteData.currency === 'EUR' ? '€' : (quoteData.currency === 'GBP' ? '£' : '$'));
+                  return (
+                    <div className="flex items-center justify-between text-sm mt-4 pt-4 border-t border-[#2d3748]">
+                      <div>
+                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Current</p>
+                        <p className="font-bold text-slate-100 text-lg">{sym}{quoteData.regularMarketPrice?.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Open</p>
+                        <p className="font-bold text-slate-100">{sym}{quoteData.regularMarketOpen?.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Prev Close</p>
+                        <p className="font-bold text-slate-100">{sym}{quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Open</p>
-                      <p className="font-bold text-slate-100">${quoteData.regularMarketOpen?.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Prev Close</p>
-                      <p className="font-bold text-slate-100">${quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               <div className="border border-[#2d3748] bg-[#22252e] rounded-xl overflow-hidden shadow-lg">
