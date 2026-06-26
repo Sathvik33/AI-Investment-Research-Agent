@@ -51,32 +51,27 @@ The core of the backend is built on [LangGraph.js](https://github.com/langchain-
 
 ```mermaid
 graph TD
-    User([User Requests Research]) --> resolve[resolveEntity]
+    User(["User Requests Research"]) --> resolve["resolveEntity"]
     
-    %% Parallel Fan-Out
-    resolve -->|Identifies Entity| split((Parallel Fan-Out))
-    split --> web[webResearchAgent]
-    split --> fin[financialDataAgent]
-    split --> news[newsSentimentAgent]
-    split --> comp[competitorAgent]
+    resolve -->|"Identifies Entity"| fanoutNode(("Parallel Fan-Out"))
+    fanoutNode --> web["webResearchAgent"]
+    fanoutNode --> fin["financialDataAgent"]
+    fanoutNode --> news["newsSentimentAgent"]
+    fanoutNode --> comp["competitorAgent"]
     
-    %% Fan-In Synthesis
-    web -->|Tavily Scraping| agg[aggregator]
-    fin -->|Yahoo Finance API| agg
-    news -->|Tavily News API| agg
-    comp -->|Market Rival Analysis| agg
+    web -->|"Tavily Scraping"| agg["aggregator"]
+    fin -->|"Yahoo Finance API"| agg
+    news -->|"Tavily News API"| agg
+    comp -->|"Market Rival Analysis"| agg
     
-    %% Analysis & Reflection
-    agg -->|Synthesized Brief| analyst[analystAgent]
-    analyst -->|5-Dimension Scoring| reflect{reflectionAgent}
+    agg -->|"Synthesized Brief"| analyst["analystAgent"]
+    analyst -->|"5-Dimension Scoring"| reflect{"reflectionAgent"}
     
-    %% Conditional Cyclic Routing
-    reflect -->|Missing Data / Low Confidence| split
-    reflect -->|High Confidence| debate[decisionAgent]
+    reflect -->|"Missing Data / Low Confidence"| fanoutNode
+    reflect -->|"High Confidence"| debate["decisionAgent"]
     
-    %% Output
-    debate -->|Debate & Verdict| report[reportGenerator]
-    report -->|Persist to Postgres + SSE Stream| Done([Final Output])
+    debate -->|"Debate & Verdict"| report["reportGenerator"]
+    report -->|"Persist to Postgres + SSE Stream"| Done(["Final Output"])
 ```
 
 ---

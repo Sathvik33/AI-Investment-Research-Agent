@@ -44,12 +44,16 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: financial-researcher
           IMAGE_TAG: latest
+          ENV_FILE: ${{ secrets.ENV_FILE }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG
+          envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,ENV_FILE
           script: |
+            # Write the ENV_FILE secret directly to the server
+            echo "$ENV_FILE" > /home/ubuntu/.env
+            
             # Login to ECR on the EC2 instance
             aws ecr get-login-password --region ap-south-1 | sudo docker login --username AWS --password-stdin $ECR_REGISTRY
             
@@ -60,7 +64,7 @@ jobs:
             sudo docker stop financial-backend || true
             sudo docker rm financial-backend || true
             
-            # Run the new container (using the .env file already present on the server)
+            # Run the new container
             sudo docker run -d \
               --name financial-backend \
               --restart unless-stopped \
