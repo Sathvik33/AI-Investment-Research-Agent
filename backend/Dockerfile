@@ -22,5 +22,5 @@ RUN npm run build
 # Expose the API port
 EXPOSE 4000
 
-# Start the server
-CMD ["npm", "start"]
+# Start the server (and ensure DB is migrated)
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
