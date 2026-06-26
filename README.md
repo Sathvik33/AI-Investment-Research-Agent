@@ -7,7 +7,7 @@
 
 <br/>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs) [![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs) [![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/) [![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
 
 <br/>
 
@@ -114,6 +114,36 @@ Each agent is an independent Node in the LangGraph, operating on a shared `Resea
 - **Styling**: Tailwind CSS
 - **Charts**: Recharts (for live stock data visualization)
 - **Deployment**: Vercel
+
+---
+
+## 📂 Project Directory Structure
+
+```text
+AI-Investment-Research-Agent/
+├── backend/
+│   ├── src/
+│   │   ├── graph/             # LangGraph Engine
+│   │   │   ├── nodes/         # 9 AI Agent Definitions
+│   │   │   ├── graph.ts       # DAG Routing & Pipeline
+│   │   │   ├── llm.ts         # Groq LLM Config
+│   │   │   └── state.ts       # Shared Graph State
+│   │   ├── tools/             # Live Data API Tools (Yahoo, Tavily)
+│   │   ├── routes/            # Express REST & SSE Endpoints
+│   │   ├── middleware/        # Rate Limiting & Auth
+│   │   └── server.ts          # Express App Entry Point
+│   ├── prisma/                # PostgreSQL Schema & Migrations
+│   ├── Dockerfile             # AWS Deployment Container
+│   └── package.json
+└── frontend/
+    ├── src/
+    │   ├── components/        # UI Components & Markdown Renderer
+    │   ├── lib/               # API Clients & SSE Listeners
+    │   ├── pages/             # Dashboard, Report, History Views
+    │   └── App.tsx            # React Router
+    ├── index.html
+    └── package.json
+```
 
 ---
 
