@@ -42,10 +42,13 @@ ${state.researchBrief}
 Scores:
 ${JSON.stringify(state.scores)}
 
+Macroeconomic Context (Current Affairs, Wars, Inflation, Tech Bubbles):
+${state.macroContext || 'None provided.'}
+
 CRITICAL INSTRUCTION: Your 'reasoning' field MUST be a detailed, rich Markdown string structured EXACTLY as follows:
 
 1. Summary of Key Arguments
-Provide a debate between three personas based on the data. You MUST place the generated body of their argument on the exact same line right after the bullet point (e.g., "- **Risky Analyst**: [Their argument here]"):
+Provide a debate between three personas based on the data. You MUST heavily factor in the Macroeconomic Context (adjusting risk appetite based on wars, bubbles, inflation). You MUST place the generated body of their argument on the exact same line right after the bullet point (e.g., "- **Risky Analyst**: [Their argument here]"):
 - **Risky Analyst**: (Bullish perspective, focusing on growth and momentum)
 - **Safe Analyst**: (Bearish perspective, focusing on risks, valuation, and volatility)
 - **Neutral Analyst**: (Pragmatic perspective, focusing on levels and hedges)

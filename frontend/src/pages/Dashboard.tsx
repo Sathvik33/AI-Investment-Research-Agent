@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { ChevronDown, ChevronRight, Loader2, ArrowLeft, Send, Target, TrendingUp, AlertTriangle, ShieldCheck, CheckCircle2, Circle, Zap } from 'lucide-react';
+import { ChevronDown, ChevronRight, Loader2, ArrowLeft, Send, Target, TrendingUp, AlertTriangle, ShieldCheck, CheckCircle2, Circle, Zap, Download } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { getSessionId } from '../lib/session';
 
@@ -14,7 +14,9 @@ const CATEGORIES = [
       { id: 'webResearchAgent', label: 'Web Research' },
       { id: 'newsSentimentAgent', label: 'News & Sentiment' },
       { id: 'competitorAgent', label: 'Competitor Analysis' },
-      { id: 'financialDataAgent', label: 'Financial Data Analysis' }
+      { id: 'financialDataAgent', label: 'Financial Data Analysis' },
+      { id: 'secFilingsAgent', label: 'SEC Filings Analysis' },
+      { id: 'macroAgent', label: 'Macroeconomic Analysis' }
     ]
   },
   {
@@ -55,6 +57,7 @@ export default function Dashboard() {
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState<{q: string, a: string}[]>([]);
   const [asking, setAsking] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -173,6 +176,38 @@ export default function Dashboard() {
       });
     } finally {
       setAsking(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById('report-content-container');
+    if (!element) return;
+    
+    setIsDownloading(true);
+    
+    const originalClassName = element.className;
+    // Temporarily switch to white theme for the capture
+    element.className = "bg-white text-black p-8 prose max-w-none";
+    element.style.color = '#000000';
+
+    try {
+      // @ts-ignore
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       15,
+        filename:     `${reportData?.company?.ticker || 'Research'}_Report.pdf`,
+        image:        { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("PDF download failed", err);
+    } finally {
+      // Restore the dark theme
+      element.className = originalClassName;
+      element.style.color = '';
+      setIsDownloading(false);
     }
   };
 
@@ -320,18 +355,30 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
                   <Zap size={20} className="text-zinc-300" />
                   Final Trade Decision
                 </h1>
-                <div className="flex items-baseline gap-3 glass-card px-5 py-2.5" style={isInvest ? { boxShadow: '0 0 30px rgba(16, 185, 129, 0.1)' } : { boxShadow: '0 0 30px rgba(239, 68, 68, 0.1)' }}>
-                  <span className={`text-xl font-extrabold tracking-tight ${isInvest ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {report.verdict}
-                  </span>
-                  <span className="text-slate-500 font-medium text-xs">
-                    {(report.confidence * 100).toFixed(0)}% Confidence
-                  </span>
+                
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={isDownloading}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 text-slate-300 disabled:opacity-50"
+                    style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                    {isDownloading ? 'Generating...' : 'Export PDF'}
+                  </button>
+                  <div className="flex items-baseline gap-3 glass-card px-5 py-2.5" style={isInvest ? { boxShadow: '0 0 30px rgba(16, 185, 129, 0.1)' } : { boxShadow: '0 0 30px rgba(239, 68, 68, 0.1)' }}>
+                    <span className={`text-xl font-extrabold tracking-tight ${isInvest ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {report.verdict}
+                    </span>
+                    <span className="text-slate-500 font-medium text-xs">
+                      {(report.confidence * 100).toFixed(0)}% Confidence
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Report Content */}
-              <div className="glass-card p-8 prose prose-invert prose-dark max-w-none" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+              <div id="report-content-container" className="glass-card p-8 prose prose-invert prose-dark max-w-none" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
                 <ReactMarkdown>{markdownContent || ''}</ReactMarkdown>
               </div>
 

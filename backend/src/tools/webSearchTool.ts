@@ -6,28 +6,33 @@ export interface SearchResult {
   content: string;
 }
 
-export async function webSearchTool(query: string, maxResults = 5): Promise<SearchResult[]> {
+export async function webSearchTool(query: string, maxResults = 5, includeDomains?: string[]): Promise<SearchResult[]> {
   if (process.env.TAVILY_API_KEY && process.env.TAVILY_API_KEY !== 'your_tavily_api_key') {
-    return runTavilySearch(query, maxResults);
+    return runTavilySearch(query, maxResults, includeDomains);
   } else {
-    return runDuckDuckGoSearch(query, maxResults);
+    return runDuckDuckGoSearch(query, maxResults, includeDomains);
   }
 }
 
-async function runTavilySearch(query: string, maxResults: number): Promise<SearchResult[]> {
+async function runTavilySearch(query: string, maxResults: number, includeDomains?: string[]): Promise<SearchResult[]> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const requestBody: any = {
         api_key: process.env.TAVILY_API_KEY,
         query,
         search_depth: "basic",
         include_answer: false,
         max_results: maxResults
-      }),
+    };
+    if (includeDomains && includeDomains.length > 0) {
+        requestBody.include_domains = includeDomains;
+    }
+
+    const response = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -45,11 +50,15 @@ async function runTavilySearch(query: string, maxResults: number): Promise<Searc
   }
 }
 
-async function runDuckDuckGoSearch(query: string, maxResults: number): Promise<SearchResult[]> {
+async function runDuckDuckGoSearch(query: string, maxResults: number, includeDomains?: string[]): Promise<SearchResult[]> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+    let finalQuery = query;
+    if (includeDomains && includeDomains.length > 0) {
+      finalQuery += ' site:' + includeDomains.join(' OR site:');
+    }
+    const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(finalQuery)}`, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       signal: controller.signal
     });

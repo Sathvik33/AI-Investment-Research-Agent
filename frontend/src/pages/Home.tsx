@@ -69,8 +69,8 @@ export default function Home() {
                 Investment
                 <span className="gradient-text"> Intelligence</span>
               </h2>
-              <p className="text-slate-400 text-base max-w-md mx-auto leading-relaxed">
-                9 specialized AI agents collaborate in real-time to deliver institutional-grade research verdicts.
+              <p className="text-slate-400 text-base max-w-lg mx-auto leading-relaxed">
+                An AI-powered Investment Research Platform. Our specialized AI agents collaborate in real-time to analyze financials, SEC filings, and global news, delivering comprehensive institutional-grade trade verdicts.
               </p>
             </div>
 

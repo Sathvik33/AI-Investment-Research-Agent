@@ -11,7 +11,7 @@
 
 <br/>
 
-> **A agentic workflow that simulates a Wall Street research desk.** <br/>Type a company name, watch 9 specialized AI agents collaborate in real-time, and get an institutional-grade investment report backed by live market data.
+> **A agentic workflow that simulates a Wall Street research desk.** <br/>Type a company name, watch specialized AI agents collaborate in real-time, and get an institutional-grade investment report backed by live market data.
 
 <br/>
 
@@ -33,13 +33,14 @@
 
 **AI Investment Research Agent** is a full-stack, event-driven application built to demonstrate the power of specialized multi-agent systems. 
 
-Instead of relying on a single monolithic prompt, this system orchestrates a **directed acyclic graph (DAG)** of 9 highly-specialized AI agents. These agents run concurrently, pull live data via API tools (Yahoo Finance, Tavily), synthesize data, self-reflect on their findings, and conduct a simulated debate to generate a final `INVEST` or `PASS` verdict.
+Instead of relying on a single monolithic prompt, this system orchestrates a **directed acyclic graph (DAG)** of highly-specialized AI agents. These agents run concurrently, pull live data via API tools (Yahoo Finance, Tavily), synthesize data, self-reflect on their findings, and conduct a simulated debate to generate a final `INVEST` or `PASS` verdict.
 
 ### Key Capabilities
-- **Parallel Fan-Out Execution:** 4 data-gathering agents execute simultaneously, cutting wait times by 75%.
+- **Parallel Fan-Out Execution:** 6 data-gathering agents execute simultaneously, drastically reducing wait times.
 - **Self-Reflection Loop:** The graph features cyclic routing; if the `reflectionAgent` detects low confidence or missing data (e.g., failed to fetch financials), it automatically loops back to the necessary data-gathering agents to retry.
 - **3-Persona Debate Engine:** The `decisionAgent` simulates a debate between a *Risk-Averse*, *Growth-Oriented*, and *Neutral* analyst to reduce AI hallucination and bias.
 - **Real-Time Streaming:** Leveraging Server-Sent Events (SSE), the backend streams the graph's execution state directly to the React frontend, providing a live "thought process" UI.
+- **One-Click PDF Export:** Export the final AI-generated markdown research report directly into a clean, styled PDF for seamless offline sharing.
 
 ---
 
@@ -58,11 +59,15 @@ graph TD
     fanoutNode --> fin["financialDataAgent"]
     fanoutNode --> news["newsSentimentAgent"]
     fanoutNode --> comp["competitorAgent"]
+    fanoutNode --> sec["secFilingsAgent"]
+    fanoutNode --> macro["macroAgent"]
     
     web -->|"Tavily Scraping"| agg["aggregator"]
     fin -->|"Yahoo Finance API"| agg
     news -->|"Tavily News API"| agg
     comp -->|"Market Rival Analysis"| agg
+    sec -->|"SEC 10-K/10-Q Parsing"| agg
+    macro -->|"Macroeconomic Data"| agg
     
     agg -->|"Synthesized Brief"| analyst["analystAgent"]
     analyst -->|"5-Dimension Scoring"| reflect{"reflectionAgent"}
@@ -76,7 +81,7 @@ graph TD
 
 ---
 
-## 🕵️ Deep Dive: The 9 Agents
+## 🕵️ Deep Dive: The Agents
 
 Each agent is an independent Node in the LangGraph, operating on a shared `ResearchState` object.
 
@@ -87,6 +92,8 @@ Each agent is an independent Node in the LangGraph, operating on a shared `Resea
 | **`financialDataAgent`** | Triggers the `yahoo-finance2` tool to fetch live balance sheets, PE ratios, and margins. | `financialData` |
 | **`newsSentimentAgent`** | Pulls the last 30 days of news and applies NLP scoring to determine market sentiment (Bullish/Bearish). | `newsSentiment` |
 | **`competitorAgent`** | Identifies the top 3-5 market rivals and compares market positioning. | `competitors` |
+| **`secFilingsAgent`** | Live targets `sec.gov` to extract recent 10-K and 10-Q risk factors and business disclosures. | `secFilings` |
+| **`macroAgent`** | Evaluates global macroeconomic trends (e.g., inflation, geopolitical events) affecting the industry. | `macroContext` |
 | **`aggregator`** | Fan-in node. Reduces the parallel data streams into a cohesive `researchBrief`. | `researchBrief` |
 | **`analystAgent`** | Grades the company from 0-10 across 5 metrics: Health, Growth, Moat, Sentiment, and Risk. | `scores` |
 | **`reflectionAgent`** | **Conditional Router**. Inspects the `researchBrief` for hallucinations or missing sections. Loops back if `confidence < 0.6`. | *Graph Routing* |

@@ -5,6 +5,8 @@ import { webResearchAgent } from "./nodes/webResearchAgent";
 import { financialDataAgent } from "./nodes/financialDataAgent";
 import { newsSentimentAgent } from "./nodes/newsSentimentAgent";
 import { competitorAgent } from "./nodes/competitorAgent";
+import { secFilingsAgent } from "./nodes/secFilingsAgent";
+import { macroAgent } from "./nodes/macroAgent";
 import { aggregator } from "./nodes/aggregator";
 import { analystAgent } from "./nodes/analystAgent";
 import { reflectionAgent } from "./nodes/reflectionAgent";
@@ -25,6 +27,8 @@ const builder = new StateGraph(ResearchStateAnnotation)
   .addNode("financialDataAgent", financialDataAgent)
   .addNode("newsSentimentAgent", newsSentimentAgent)
   .addNode("competitorAgent", competitorAgent)
+  .addNode("secFilingsAgent", secFilingsAgent)
+  .addNode("macroAgent", macroAgent)
   .addNode("aggregator", aggregator)
   .addNode("analystAgent", analystAgent)
   .addNode("reflectionAgent", reflectionAgent)
@@ -37,11 +41,15 @@ const builder = new StateGraph(ResearchStateAnnotation)
   .addEdge("resolveEntity", "financialDataAgent")
   .addEdge("resolveEntity", "newsSentimentAgent")
   .addEdge("resolveEntity", "competitorAgent")
+  .addEdge("resolveEntity", "secFilingsAgent")
+  .addEdge("resolveEntity", "macroAgent")
   // Fan-In
   .addEdge("webResearchAgent", "aggregator")
   .addEdge("financialDataAgent", "aggregator")
   .addEdge("newsSentimentAgent", "aggregator")
   .addEdge("competitorAgent", "aggregator")
+  .addEdge("secFilingsAgent", "aggregator")
+  .addEdge("macroAgent", "aggregator")
   // Linear progression
   .addEdge("aggregator", "analystAgent")
   .addEdge("analystAgent", "reflectionAgent")

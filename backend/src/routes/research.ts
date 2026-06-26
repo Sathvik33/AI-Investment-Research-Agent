@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { graph } from '../graph/graph';
 import { getCheckpointer } from '../db/checkpointer';
 import { runEmitter } from '../lib/sse';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'crypto';
 import { runFollowupChain } from '../chains/followupChain';
 import { rateLimiter } from '../middleware/rateLimiter';
 import YF from 'yahoo-finance2';
@@ -46,7 +46,7 @@ router.post('/', rateLimiter, async (req: Request, res: Response) => {
     }
 
     // Attempt to connect DB for persistence, if it fails, fallback to mocked behavior for UI to work
-    let runId = uuidv4();
+    let runId: string = uuidv4();
     try {
       // Find or create company
       let company = await prisma.company.findFirst({ where: { name: companyName } });

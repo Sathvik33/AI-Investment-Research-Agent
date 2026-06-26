@@ -13,7 +13,9 @@ export const aggregator = async (state: ResearchState): Promise<Partial<Research
     webResearch: state.webResearch,
     financials: state.financials,
     newsSentiment: state.newsSentiment,
-    competitiveLandscape: state.competitiveLandscape
+    competitiveLandscape: state.competitiveLandscape,
+    secFilings: state.secFilings,
+    macroContext: state.macroContext
   };
 
   const llm = getLLM();

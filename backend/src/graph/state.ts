@@ -59,6 +59,14 @@ export const ResearchStateAnnotation = Annotation.Root({
     reducer: (x, y) => y ?? x,
     default: () => undefined,
   }),
+  secFilings: Annotation<string | undefined>({
+    reducer: (x, y) => y ?? x,
+    default: () => undefined,
+  }),
+  macroContext: Annotation<string | undefined>({
+    reducer: (x, y) => y ?? x,
+    default: () => undefined,
+  }),
   researchBrief: Annotation<string | undefined>({
     reducer: (x, y) => y ?? x,
     default: () => undefined,
