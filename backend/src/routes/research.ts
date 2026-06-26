@@ -4,9 +4,11 @@ import { graph } from '../graph/graph';
 import { getCheckpointer } from '../db/checkpointer';
 import { runEmitter } from '../lib/sse';
 import { v4 as uuidv4 } from 'uuid';
-import YF from 'yahoo-finance2';
-const yahooFinance = new (YF as any)({ suppressNotices: ['yahooSurvey'] });
 import { runFollowupChain } from '../chains/followupChain';
+import { rateLimiter } from '../middleware/rateLimiter';
+import YF from 'yahoo-finance2';
+
+const yahooFinance = new (YF as any)({ suppressNotices: ['yahooSurvey'] });
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -18,13 +20,14 @@ router.get('/search', async (req: Request, res: Response) => {
        res.json([]);
        return;
     }
+    
     const results = await yahooFinance.search(query) as any;
     const options = results.quotes
-      .filter((q: any) => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
+      .filter((q: any) => q.isYahooFinance)
       .map((q: any) => ({
          symbol: q.symbol,
-         shortname: q.shortname || q.longname,
-         exchange: q.exchDisp
+         shortname: q.shortname,
+         exchange: q.exchange
       }))
       .slice(0, 10);
     res.json(options);
@@ -34,7 +37,7 @@ router.get('/search', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', rateLimiter, async (req: Request, res: Response) => {
   try {
     const { companyName, ticker, force } = req.body;
     if (!companyName) {
@@ -201,43 +204,41 @@ router.get('/:runId/chart', async (req: Request, res: Response) => {
     }) as any;
     
     if (!run || !run.company.ticker) {
-      // Mock data if no ticker
-      const mockData = Array.from({length: 30}).map((_, i) => ({
-        date: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 150 + Math.random() * 20 - 10
-      }));
-      res.json(mockData);
+      res.status(404).json({ error: "Company ticker not found" });
       return;
     }
 
-    const period1 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const historicalResult = await yahooFinance.chart(run.company.ticker, {
-      period1,
-      interval: '1d'
-    }) as any;
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
     
-    const historical = historicalResult.quotes;
-
-    const chartData = historical.map((item: any) => ({
-      date: item.date.toISOString().split('T')[0],
-      price: item.close
-    }));
+    const queryOptions = {
+      period1: thirtyDaysAgo.toISOString().split('T')[0],
+      period2: today.toISOString().split('T')[0],
+      interval: '1d' as const
+    };
+    
+    const historicalResult = await yahooFinance.historical(run.company.ticker, queryOptions) as any[];
+    
+    let chartData: any[] = [];
+    if (historicalResult && historicalResult.length > 0) {
+      chartData = historicalResult.map((item: any) => ({
+        date: item.date.toISOString().split('T')[0],
+        price: item.close
+      }));
+    }
 
     let quote = null;
     try {
-      quote = await yahooFinance.quote(run.company.ticker);
+      quote = await yahooFinance.quote(run.company.ticker) as any;
     } catch(err) {
       console.warn("Could not fetch quote:", err);
     }
 
     res.json({ chart: chartData, quote });
   } catch (e) {
-    console.warn("Falling back to mock chart data due to:", e);
-    const mockData = Array.from({length: 30}).map((_, i) => ({
-      date: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      price: 150 + Math.random() * 20 - 10
-    }));
-    res.json({ chart: mockData, quote: null });
+    console.error("Error fetching chart data:", e);
+    res.status(500).json({ error: 'Failed to fetch market data' });
   }
 });
 

@@ -3,22 +3,15 @@
 <br/>
 
 # AI Investment Research Agent
-
-### *A fully autonomous, multi-agent hedge fund analyst — powered by LangGraph & Groq*
-
-<br/>
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs)
-[![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+### *Autonomous, Multi-Agent Hedge Fund Analyst — Powered by LangGraph & Groq*
 
 <br/>
 
-> **Type a company name. Watch 9 specialized AI agents collaborate in real-time. Get an institutional-grade investment report in minutes — for free, with zero rate limits.**
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs) [![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+
+<br/>
+
+> **A agentic workflow that simulates a Wall Street research desk.** <br/>Type a company name, watch 9 specialized AI agents collaborate in real-time, and get an institutional-grade investment report backed by live market data.
 
 <br/>
 
@@ -26,213 +19,260 @@
 
 </div>
 
-## What Is This?
-
-**AI Investment Research Agent** is a production-grade agentic application that simulates a Wall Street research desk. Instead of a single chatbot, it deploys a **graph of specialized AI agents** — each with a distinct role — that run in parallel, debate each other, self-reflect on their confidence, and deliver a final INVEST or PASS verdict backed by deep, structured reasoning.
-
-The entire pipeline is powered by **Groq** using `llama-3.3-70b-versatile`, giving you **blazing fast** inference for near-instant, real-time analysis.
+## 📖 Table of Contents
+1. [Platform Overview](#-platform-overview)
+2. [Agentic Architecture & Workflow](#-agentic-architecture--workflow)
+3. [Deep Dive: The 9 Agents](#-deep-dive-the-9-agents)
+4. [Tech Stack](#-tech-stack)
+5. [Local Development Setup](#-local-development-setup)
+6. [Industry Deployment Guide (AWS EC2 + Docker)](#-industry-deployment-guide-aws-ec2--docker)
 
 ---
 
-## Live Pipeline
+## 🚀 Platform Overview
 
+**AI Investment Research Agent** is a full-stack, event-driven application built to demonstrate the power of specialized multi-agent systems. 
+
+Instead of relying on a single monolithic prompt, this system orchestrates a **directed acyclic graph (DAG)** of 9 highly-specialized AI agents. These agents run concurrently, pull live data via API tools (Yahoo Finance, Tavily), synthesize data, self-reflect on their findings, and conduct a simulated debate to generate a final `INVEST` or `PASS` verdict.
+
+### Key Capabilities
+- **Parallel Fan-Out Execution:** 4 data-gathering agents execute simultaneously, cutting wait times by 75%.
+- **Self-Reflection Loop:** The graph features cyclic routing; if the `reflectionAgent` detects low confidence or missing data (e.g., failed to fetch financials), it automatically loops back to the necessary data-gathering agents to retry.
+- **3-Persona Debate Engine:** The `decisionAgent` simulates a debate between a *Risk-Averse*, *Growth-Oriented*, and *Neutral* analyst to reduce AI hallucination and bias.
+- **Real-Time Streaming:** Leveraging Server-Sent Events (SSE), the backend streams the graph's execution state directly to the React frontend, providing a live "thought process" UI.
+
+---
+
+## 🧠 Agentic Architecture & Workflow
+
+The core of the backend is built on [LangGraph.js](https://github.com/langchain-ai/langgraphjs), defining a strict state machine for the agents to traverse.
+
+### The LangGraph Workflow
+
+```mermaid
+graph TD
+    User([User Requests Research]) --> resolve[resolveEntity]
+    
+    %% Parallel Fan-Out
+    resolve -->|Identifies Entity| split((Parallel Fan-Out))
+    split --> web[webResearchAgent]
+    split --> fin[financialDataAgent]
+    split --> news[newsSentimentAgent]
+    split --> comp[competitorAgent]
+    
+    %% Fan-In Synthesis
+    web -->|Tavily Scraping| agg[aggregator]
+    fin -->|Yahoo Finance API| agg
+    news -->|Tavily News API| agg
+    comp -->|Market Rival Analysis| agg
+    
+    %% Analysis & Reflection
+    agg -->|Synthesized Brief| analyst[analystAgent]
+    analyst -->|5-Dimension Scoring| reflect{reflectionAgent}
+    
+    %% Conditional Cyclic Routing
+    reflect -->|Missing Data / Low Confidence| split
+    reflect -->|High Confidence| debate[decisionAgent]
+    
+    %% Output
+    debate -->|Debate & Verdict| report[reportGenerator]
+    report -->|Persist to Postgres + SSE Stream| Done([Final Output])
 ```
-User types: "Infosys"
-     |
-     v
-[resolveEntity] --> Finds ticker, legal name & industry via LLM + web search
-     |
-     +---------------------------+--------------------+------------------+
-     v                          v                    v                  v
-[webResearchAgent]   [financialDataAgent]  [newsSentimentAgent]  [competitorAgent]
-  Web scraping +      Yahoo Finance API     News NLP + scoring     Rival analysis
-  business summary    live fundamentals     bullish/bearish         top 3-5 rivals
-     |                          |                    |                  |
-     +---------------------------+--------------------+------------------+
-                                         v
-                                   [aggregator]   <-- Synthesizes unified research brief
-                                         v
-                                  [analystAgent]  <-- Scores company across 5 dimensions
-                                         v
-                                [reflectionAgent] --- confidence < 60%? ---> loop back
-                                         |
-                                         v
-                                 [decisionAgent]  <-- 3-persona debate: Risky vs Safe vs Neutral
-                                         v
-                                [reportGenerator] <-- Persists to PostgreSQL, streams to UI
-```
 
 ---
 
-## Key Features
+## 🕵️ Deep Dive: The 9 Agents
 
-| Feature | Description |
-|---|---|
-| **9 Specialized AI Agents** | Each agent has a single, focused responsibility — no monolithic prompts |
-| **Parallel Fan-Out Architecture** | 4 research agents run simultaneously, dramatically cutting pipeline time |
-| **Self-Reflection Loop** | The `reflectionAgent` re-triggers research if confidence falls below 60% |
-| **3-Persona Debate Engine** | Risky, Safe, and Neutral analyst personas debate before issuing a verdict |
-| **Live Stock Chart** | Real-time price chart pulled from Yahoo Finance via `yahoo-finance2` |
-| **Multi-Currency Support** | Auto-detects INR (Rs.), EUR (Euro), GBP (GBP) for international stocks |
-| **Follow-up Chat** | Conversational Q&A backed by the full research brief as context |
-| **Blazing Fast AI** | Powered by Groq and Llama 3.3 70B for near-instant research generation |
-| **Real-time SSE Streaming** | Agent progress streams live to the frontend via Server-Sent Events |
-| **Persistent Reports** | All reports stored in PostgreSQL via Prisma — browse your full history |
+Each agent is an independent Node in the LangGraph, operating on a shared `ResearchState` object.
+
+| Agent Node | Core Responsibility | Output Artifact |
+|---|---|---|
+| **`resolveEntity`** | Disambiguates user input into a formal legal name, industry, and exact stock ticker. | `resolvedEntity` |
+| **`webResearchAgent`** | Scrapes the web for business models, recent partnerships, and overarching company strategy. | `webResearch` |
+| **`financialDataAgent`** | Triggers the `yahoo-finance2` tool to fetch live balance sheets, PE ratios, and margins. | `financialData` |
+| **`newsSentimentAgent`** | Pulls the last 30 days of news and applies NLP scoring to determine market sentiment (Bullish/Bearish). | `newsSentiment` |
+| **`competitorAgent`** | Identifies the top 3-5 market rivals and compares market positioning. | `competitors` |
+| **`aggregator`** | Fan-in node. Reduces the parallel data streams into a cohesive `researchBrief`. | `researchBrief` |
+| **`analystAgent`** | Grades the company from 0-10 across 5 metrics: Health, Growth, Moat, Sentiment, and Risk. | `scores` |
+| **`reflectionAgent`** | **Conditional Router**. Inspects the `researchBrief` for hallucinations or missing sections. Loops back if `confidence < 0.6`. | *Graph Routing* |
+| **`decisionAgent`** | Synthesizes the debate into a final `INVEST` or `PASS` verdict with a concrete strategy. | `decision` |
+| **`reportGenerator`** | Formats the final markdown report and persists the entire state tree to PostgreSQL via Prisma. | *Database Write* |
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 ### Backend
-- **Runtime**: Node.js + TypeScript + `ts-node-dev`
-- **AI Orchestration**: [LangGraph.js](https://github.com/langchain-ai/langgraphjs)
-- **LLM Provider**: [Groq](https://console.groq.com/) (`llama-3.3-70b-versatile`)
-- **Web Search**: [Tavily API](https://tavily.com/) — grounded, citation-backed search
-- **Financial Data**: `yahoo-finance2` — live price charts and fundamentals
-- **Database**: PostgreSQL (via [Neon](https://neon.tech/)) + [Prisma ORM](https://www.prisma.io/) + `pgvector`
-- **API Server**: Express.js with SSE streaming
+- **Framework**: Node.js + Express.js + TypeScript
+- **AI Orchestration**: LangGraph.js + LangChain
+- **LLM Provider**: Groq (`llama-3.3-70b-versatile`) for sub-second inference.
+- **Database**: PostgreSQL (Neon) + Prisma ORM
+- **Containerization**: Docker
 
 ### Frontend
-- **Framework**: React 18 + TypeScript + [Vite](https://vitejs.dev/)
-- **Routing**: React Router v7
-- **Styling**: Tailwind CSS — dark mode, glassmorphism
-- **Charts**: [Recharts](https://recharts.org/) — interactive stock price visualization
-- **Markdown**: `react-markdown` — rich report rendering
+- **Framework**: React 18 + Vite + TypeScript
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts (for live stock data visualization)
+- **Deployment**: Vercel
 
 ---
 
-## Getting Started
+## 💻 Local Development Setup
 
 ### Prerequisites
+- Node.js v20+
+- [Groq API Key](https://console.groq.com/)
+- [Tavily API Key](https://tavily.com/)
+- PostgreSQL Database (e.g., [Neon](https://neon.tech/))
 
-- **Node.js** v18+
-- **Groq API Key** — [Get one free](https://console.groq.com/)
-- **PostgreSQL** database — [Neon free tier](https://neon.tech/) recommended
-- **Tavily API Key** — [Get one free](https://tavily.com/) (1,000 searches/month)
-
-### 1. Clone the repository
-
+### 1. Clone & Install
 ```bash
 git clone https://github.com/Sathvik33/AI-Investment-Research-Agent.git
 cd AI-Investment-Research-Agent
-```
 
-
-
-### 2. Configure the backend
-
-```bash
-cd backend
-cp .env.example .env
-# Fill in your DATABASE_URL, TAVILY_API_KEY, and GROQ_API_KEY
-```
-
-### 3. Install dependencies and run migrations
-
-```bash
 # Backend
-cd backend && npm install && npx prisma migrate deploy
+cd backend && npm install
+cp .env.example .env
 
 # Frontend
 cd ../frontend && npm install
 ```
 
-### 4. Launch
+### 2. Configure Environment (`backend/.env`)
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/db"
+TAVILY_API_KEY="tvly-..."
+GROQ_API_KEY="gsk_..."
+PORT=4000
+```
 
+### 3. Run the Stack
 ```bash
-# Terminal 1
-cd backend && npm run dev
+# Terminal 1: Backend
+cd backend && npx prisma migrate deploy && npm run dev
 
-# Terminal 2
+# Terminal 2: Frontend
 cd frontend && npm run dev
 ```
 
-Open **http://localhost:5173** and type any company name!
+> **💡 Pro Tip: Local LLMs**: 
+> You can swap out `ChatGroq` for `ChatOllama` in `backend/src/graph/llm.ts` to use a local model like `qwen2.5:7b` during local development to save on API tokens!
+
+> **💡 Pro Tip: Market Data APIs**:
+> The project defaults to `yahoo-finance2` because it is completely free and great for local development. However, Yahoo Finance frequently blocks cloud IPs (like AWS/Vercel). If you move to production, you may need to swap the `financialDataAgent` to use a paid tier of TwelveData or Alpha Vantage.
 
 ---
 
+## 🌍 Industry Deployment Guide (AWS EC2 + Docker + Vercel)
 
+This guide walks through deploying the backend securely to an AWS EC2 instance using Docker, AWS ECR, and NGINX for SSL termination, and hosting the frontend on Vercel.
 
----
+### Phase 1: Deploy Frontend to Vercel
+1. Update `API_URL` in `frontend/src/lib/api.ts` to point to your future backend URL (e.g., `https://investment-research.remotewire.net/api`).
+2. Push your code to GitHub.
+3. Log into [Vercel](https://vercel.com/) and click **Add New Project**.
+4. Import your GitHub repository, set the **Framework Preset** to Vite, and set the **Root Directory** to `frontend`.
+5. Click **Deploy**. Your frontend is now live!
 
-## Agent Roles
+### Phase 2: Push Backend to AWS ECR
+1. Create a private repository in **AWS ECR** (Elastic Container Registry).
+2. On your local machine, authenticate and push the Docker image:
+```bash
+# Login to AWS ECR
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com
 
-| Agent | Role | Output |
-|---|---|---|
-| `resolveEntity` | Disambiguates name to ticker, legal name, industry | `resolvedEntity` |
-| `webResearchAgent` | Scrapes and summarizes business overview and news | `webResearch` |
-| `financialDataAgent` | Pulls live financials from Yahoo Finance | `financialData` |
-| `newsSentimentAgent` | Scores headlines bullish/bearish | `newsSentiment` |
-| `competitorAgent` | Identifies top 3-5 market rivals | `competitors` |
-| `aggregator` | Synthesizes all research into a unified brief | `researchBrief` |
-| `analystAgent` | Scores 5 dimensions: Health, Growth, Moat, Sentiment, Risk | `scores` |
-| `reflectionAgent` | Reviews confidence; loops back if below 60% | routing |
-| `decisionAgent` | 3-persona debate -> INVEST/PASS verdict + strategy | `decision` |
-| `reportGenerator` | Persists to DB, streams final report to UI | database write |
+# Build the Image
+docker build -t financial-researcher .
 
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `TAVILY_API_KEY` | Yes | Tavily web search API key |
-| `GROQ_API_KEY` | Yes | Required for Groq fast inference |
-| `PORT` | No | Backend port (default: `4000`) |
-| `FRONTEND_ORIGIN` | No | CORS origin (default: `http://localhost:5173`) |
-
----
-
-## 💡 Pro Tip: Local Testing vs Production
-
-While **Groq** provides blazing-fast inference for production, you can easily swap the LLM provider to **Ollama** during development to save on API tokens and costs. 
-
-To test locally:
-1. Install [Ollama](https://ollama.ai/) and run `ollama pull qwen2.5:7b` (recommended for its great tool calling and reasoning).
-2. Update `backend/src/graph/llm.ts` to use `ChatOllama` instead of `ChatGroq`.
-
-Once your prompt engineering and agents are fully tested, switch back to Groq for lightning-fast production deployments!
-
----
-
-## Project Structure
-
+# Tag & Push
+docker tag financial-researcher:latest <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com/financial-researcher:latest
+docker push <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com/financial-researcher:latest
 ```
-AI-Investment-Research-Agent/
-+-- backend/
-|   +-- src/
-|   |   +-- graph/
-|   |   |   +-- nodes/          # All 10 AI agent definitions
-|   |   |   +-- graph.ts        # LangGraph pipeline definition
-|   |   |   +-- llm.ts          # LLM provider (Groq)
-|   |   |   +-- state.ts        # Shared state type definitions
-|   |   +-- tools/              # webSearch, webFetch, financialData, newsSearch
-|   |   +-- routes/             # Express REST + SSE endpoints
-|   |   +-- db/                 # Prisma client & DB utilities
-|   |   +-- server.ts           # Express app entry point
-|   +-- prisma/
-|   |   +-- schema.prisma       # Database schema
-|   +-- .env.example
-+-- frontend/
-|   +-- src/
-|   |   +-- pages/
-|   |   |   +-- Home.tsx        # Company search & run creation
-|   |   |   +-- Dashboard.tsx   # Live 3-column research dashboard
-|   |   |   +-- Report.tsx      # Full report view
-|   |   |   +-- History.tsx     # Past research run browser
-|   |   +-- App.tsx
-|   +-- vite.config.ts
-+-- README.md
+
+### Phase 3: Provision EC2 & Security Groups
+1. Launch an **Ubuntu EC2 instance** in AWS.
+2. Under **Security Groups**, add the following Inbound Rules:
+   - **Port 22 (SSH)**: Set Source to *My IP*
+   - **Port 80 (HTTP)**: Set Source to *0.0.0.0/0*
+   - **Port 443 (HTTPS)**: Set Source to *0.0.0.0/0*
+
+### Phase 4: Setup EC2 Environment
+SSH into your EC2 instance and install the required infrastructure:
+```bash
+# 1. Install AWS CLI
+sudo snap install aws-cli --classic
+
+# 2. Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker ubuntu
+
+# 3. Install NGINX & Certbot (for SSL)
+sudo apt update
+sudo apt install -y nginx certbot python3-certbot-nginx
 ```
+*(Note: Type `exit` and SSH back in so your user inherits the Docker permissions).*
+
+### Phase 5: Run the Backend Container
+Create your `.env` file on the server, log in to ECR, and launch the container:
+```bash
+# Create ENV file
+nano .env  # Paste your DB and API keys here
+
+# Login & Pull
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com
+docker pull <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com/financial-researcher:latest
+
+# Run the Container (Binding to port 4000)
+docker run -d \
+  --name financial-backend \
+  --restart unless-stopped \
+  -p 4000:4000 \
+  --env-file .env \
+  <YOUR_AWS_ID>.dkr.ecr.ap-south-1.amazonaws.com/financial-researcher:latest
+```
+
+### Phase 6: NGINX Reverse Proxy & SSL (Certbot)
+To accept secure `https://` requests from your frontend, route traffic through NGINX.
+1. Point your domain (e.g., via Dynu/DuckDNS) to your **EC2 Public IPv4 Address**.
+2. Edit the NGINX config:
+```bash
+sudo nano /etc/nginx/sites-available/default
+```
+3. Paste this configuration (ensuring SSE streaming works):
+```nginx
+server {
+    server_name """REPLACE WITH YOUR DOMAIN""";
+
+    location / {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Ensure Server-Sent Events (SSE) stream perfectly
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+}
+```
+4. Restart NGINX and secure the server with an SSL certificate:
+```bash
+sudo nginx -t
+sudo systemctl restart nginx
+sudo certbot --nginx -d investment-research.remotewire.net
+```
+
+🎉 **Your full-stack application is now deployed and secure!** 
 
 ---
 
 ## License
 
 Apache 2.0 License - open source and free for personal and commercial use.
-
----
 
 <div align="center">
 

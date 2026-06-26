@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5173', 'https://ai-investment-research-agent-mh1h.vercel.app', 'https://investment-research.remotewire.net'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-session-id']
 }));
