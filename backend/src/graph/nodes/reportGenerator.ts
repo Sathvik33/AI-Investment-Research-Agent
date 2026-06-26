@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 
 export const reportGenerator = async (state: ResearchState, config?: RunnableConfig): Promise<Partial<ResearchState>> => {
   console.log('Running reportGenerator...');
-  
+
   const runId = config?.configurable?.thread_id;
-  
+
   if (!runId) {
     console.warn("No thread_id (runId) provided in config. Skipping DB persistence.");
     return {};

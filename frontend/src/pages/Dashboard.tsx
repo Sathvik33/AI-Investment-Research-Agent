@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { ChevronDown, ChevronRight, Loader2, ArrowLeft, Send, Target, TrendingUp, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChevronDown, ChevronRight, Loader2, ArrowLeft, Send, Target, TrendingUp, AlertTriangle, ShieldCheck, CheckCircle2, Circle, Zap } from 'lucide-react';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { getSessionId } from '../lib/session';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -221,55 +221,84 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
     }
   }
 
+  // Count completed for progress
+  const totalNodes = CATEGORIES.reduce((sum, cat) => sum + cat.nodes.length, 0);
+  const completedCount = report ? totalNodes : completedNodes.size;
+  const progressPercent = Math.round((completedCount / totalNodes) * 100);
+
   return (
-    <div className="flex h-full bg-[#1a1c23] text-slate-300 font-sans overflow-hidden gap-6">
+    <div className="flex h-full text-slate-300 overflow-hidden gap-0">
       
       {/* LEFT: Progress Sidebar */}
-      <div className="w-72 shrink-0 hidden md:flex flex-col h-full bg-[#1a1c23] pr-2 pb-4 overflow-y-auto">
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors mb-6 pb-4 border-b border-[#2d3748]">
-          <ArrowLeft size={16} /> <span className="font-semibold tracking-wider text-sm uppercase">Dashboard</span>
+      <div className="w-72 shrink-0 hidden md:flex flex-col h-full pr-2 pb-4 overflow-y-auto" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          <ArrowLeft size={14} /> <span className="font-semibold tracking-wider text-xs uppercase">New Analysis</span>
         </button>
         
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-slate-100 tracking-wide">Progress</h2>
-          <p className="text-emerald-400 text-sm mt-1 flex items-center gap-2 font-medium">
-            {!report ? <><Loader2 size={14} className="animate-spin" /> {activeNodeLabel}</> : 'Analysis Complete'}
+        {/* Progress Header */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base font-bold text-white tracking-tight">Pipeline Progress</h2>
+            <span className="text-xs font-semibold gradient-text">{progressPercent}%</span>
+          </div>
+          {/* Progress bar */}
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-full rounded-full gradient-bg transition-all duration-700 ease-out" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p className="text-xs mt-2 flex items-center gap-1.5">
+            {!report ? (
+              <><span className="w-1.5 h-1.5 rounded-full bg-zinc-300 animate-pulse" /><span className="text-zinc-300 font-medium">{activeNodeLabel}</span></>
+            ) : (
+              <><CheckCircle2 size={12} className="text-emerald-400" /><span className="text-emerald-400 font-medium">Analysis Complete</span></>
+            )}
           </p>
         </div>
 
         {error && (
-          <div className="text-rose-500 mb-4 text-sm bg-rose-500/10 p-3 rounded">
-            Error: {error}
+          <div className="text-rose-400 mb-4 text-xs p-3 rounded-xl" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
+            {error}
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {CATEGORIES.map(category => (
-            <div key={category.title} className="border border-[#2d3748] rounded-xl overflow-hidden bg-[#22252e]">
+            <div key={category.title} className="glass-card overflow-hidden">
               <button 
                 onClick={() => toggleCategory(category.title)}
-                className="w-full flex items-center justify-between p-3 text-sm font-semibold text-emerald-500 hover:bg-[#2d3748] transition-colors"
+                className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
               >
-                {category.title}
-                {expandedCategories.has(category.title) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                <span className="uppercase tracking-wider">{category.title}</span>
+                {expandedCategories.has(category.title) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </button>
               
               {expandedCategories.has(category.title) && (
-                <div className="p-3 space-y-3 bg-[#1e2128]">
+                <div className="px-3 pb-3 space-y-1.5">
                   {category.nodes.map(node => {
                     const isCompleted = completedNodes.has(node.id) || !!report;
                     const isActive = activeNode === node.id && !isCompleted && !report;
                     
                     return (
-                      <div key={node.id} className="flex flex-col">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-sm ${isActive ? 'text-emerald-400 font-semibold' : 'text-slate-400'}`}>
+                      <div key={node.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg transition-all duration-300" style={isActive ? { background: 'rgba(255, 255, 255, 0.06)' } : {}}>
+                        <div className="flex items-center gap-2.5">
+                          {isCompleted ? (
+                            <div className="animate-scale-in">
+                              <CheckCircle2 size={14} className="text-emerald-400" />
+                            </div>
+                          ) : isActive ? (
+                            <div className="relative">
+                              <div className="w-3.5 h-3.5 rounded-full gradient-bg animate-pulse" />
+                              <div className="absolute inset-0 w-3.5 h-3.5 rounded-full gradient-bg opacity-40" style={{ animation: 'pulse-ring 1.5s ease-out infinite' }} />
+                            </div>
+                          ) : (
+                            <Circle size={14} className="text-slate-600" />
+                          )}
+                          <span className={`text-xs font-medium transition-colors ${isActive ? 'text-zinc-300' : isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
                             {node.label}
                           </span>
-                          <span className={`text-xs ${isCompleted ? 'text-emerald-500' : isActive ? 'text-emerald-400/70 animate-pulse' : 'text-slate-600'}`}>
-                            {isCompleted ? 'completed' : isActive ? 'running...' : 'pending'}
-                          </span>
                         </div>
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isCompleted ? 'text-emerald-400/60' : isActive ? 'text-zinc-300/60' : 'text-slate-700'}`}>
+                          {isCompleted ? 'done' : isActive ? 'running' : 'pending'}
+                        </span>
                       </div>
                     );
                   })}
@@ -281,40 +310,45 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
       </div>
 
       {/* MIDDLE: Main Content - Report & Chat */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden border-l border-[#2d3748] pl-6">
+      <div className="flex-1 flex flex-col h-full overflow-hidden px-6">
         {report ? (
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-y-auto pr-4 pb-4">
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold text-emerald-400">Final Trade Decision</h1>
-                <div className="flex items-baseline gap-4 border border-[#2d3748] bg-[#22252e] px-4 py-2 rounded-xl">
-                  <span className={`text-2xl font-bold ${isInvest ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 pb-4">
+              {/* Verdict Header */}
+              <div className="flex items-center justify-between mb-6 mt-1">
+                <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                  <Zap size={20} className="text-zinc-300" />
+                  Final Trade Decision
+                </h1>
+                <div className="flex items-baseline gap-3 glass-card px-5 py-2.5" style={isInvest ? { boxShadow: '0 0 30px rgba(16, 185, 129, 0.1)' } : { boxShadow: '0 0 30px rgba(239, 68, 68, 0.1)' }}>
+                  <span className={`text-xl font-extrabold tracking-tight ${isInvest ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {report.verdict}
                   </span>
-                  <span className="text-slate-400 font-medium text-sm">
-                    ({(report.confidence * 100).toFixed(0)}% Conf)
+                  <span className="text-slate-500 font-medium text-xs">
+                    {(report.confidence * 100).toFixed(0)}% Confidence
                   </span>
                 </div>
               </div>
 
-              <div className="border border-[#2d3748] bg-[#22252e] rounded-xl p-8 prose prose-invert prose-dark prose-lg max-w-none">
+              {/* Report Content */}
+              <div className="glass-card p-8 prose prose-invert prose-dark max-w-none" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
                 <ReactMarkdown>{markdownContent || ''}</ReactMarkdown>
               </div>
 
               {/* Chat History */}
               {chatHistory.length > 0 && (
-                <div className="mt-8 space-y-6">
-                  <h3 className="text-lg font-semibold text-slate-100 border-b border-[#2d3748] pb-2">Follow-up Discussion</h3>
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>Follow-up Discussion</h3>
                   {chatHistory.map((chat, idx) => (
                     <div key={idx} className="space-y-3">
                       <div className="flex justify-end">
-                        <div className="bg-emerald-600/20 text-emerald-100 px-4 py-3 rounded-2xl rounded-tr-sm max-w-[80%]">
+                        <div className="px-4 py-3 rounded-2xl rounded-tr-sm max-w-[80%] text-sm text-white" style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(16,185,129,0.15))', border: '1px solid rgba(6,182,212,0.15)' }}>
                           {chat.q}
                         </div>
                       </div>
                       <div className="flex justify-start">
-                        <div className="bg-[#2d3748] text-slate-200 px-4 py-3 rounded-2xl rounded-tl-sm max-w-[90%]">
-                          {chat.a ? <div className="prose prose-invert prose-sm"><ReactMarkdown>{chat.a}</ReactMarkdown></div> : <Loader2 size={16} className="animate-spin text-emerald-500" />}
+                        <div className="glass-card px-4 py-3 rounded-2xl rounded-tl-sm max-w-[90%] text-sm">
+                          {chat.a ? <div className="prose prose-invert prose-sm prose-dark"><ReactMarkdown>{chat.a}</ReactMarkdown></div> : <Loader2 size={14} className="animate-spin text-zinc-300" />}
                         </div>
                       </div>
                     </div>
@@ -325,59 +359,84 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
             </div>
 
             {/* Chat Input */}
-            <div className="pt-4 border-t border-[#2d3748] pr-4 mt-auto shrink-0">
+            <div className="pt-4 pr-2 mt-auto shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
               <form onSubmit={handleAsk} className="relative">
                 <input
                   type="text"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Ask a follow-up question about this company..."
-                  className="w-full bg-[#22252e] border border-[#2d3748] rounded-xl py-4 pl-5 pr-14 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                  className="input-glass w-full py-3.5 pl-5 pr-14 text-sm"
                   disabled={asking}
                 />
                 <button
                   type="submit"
                   disabled={asking || !question.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white p-2 rounded-lg transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 gradient-bg-hover text-white p-2 rounded-lg transition-all disabled:opacity-30"
                 >
-                  {asking ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                  {asking ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 </button>
               </form>
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-slate-500">
-            <Loader2 size={48} className="animate-spin text-[#2d3748] mb-4" />
-            <p className="text-lg">Running Research Pipeline...</p>
+          /* Loading State */
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center animate-float" style={{ boxShadow: '0 0 40px rgba(255, 255, 255, 0.2)' }}>
+                <Loader2 size={28} className="animate-spin text-white" />
+              </div>
+            </div>
+            <p className="text-base font-semibold text-white mb-1">Running Research Pipeline</p>
+            <p className="text-sm text-slate-500">{activeNodeLabel}</p>
           </div>
         )}
       </div>
 
       {/* RIGHT: Trading Strategy & Graph */}
       {report && (
-        <div className="w-[350px] lg:w-[400px] shrink-0 flex flex-col h-full overflow-hidden border-l border-[#2d3748] pl-4">
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2 pb-8">
-            <div className="flex flex-col gap-6">
-              <div className="border border-[#2d3748] bg-[#22252e] rounded-xl p-5 shadow-lg">
-                <h3 className="text-slate-100 font-bold mb-4 flex items-center gap-2">
-                  <TrendingUp size={18} className="text-emerald-500" /> Market Action
-                </h3>
-                <div className="h-48 w-full">
+        <div className="w-[340px] lg:w-[380px] shrink-0 flex flex-col h-full overflow-hidden pl-4" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 pb-8">
+            <div className="flex flex-col gap-5">
+
+              {/* Stock Chart Card */}
+              <div className="glass-card overflow-hidden" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                <div className="p-4 pb-0">
+                  <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-4">
+                    <TrendingUp size={14} className="text-zinc-300" /> Market Action
+                  </h3>
+                </div>
+                <div className="h-44 w-full px-2">
                   {chartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#22c55e" stopOpacity={0.2} />
+                            <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
                         <XAxis dataKey="date" hide />
                         <YAxis domain={['auto', 'auto']} hide />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1a1c23', border: '1px solid #2d3748', borderRadius: '8px' }}
-                          itemStyle={{ color: '#10b981' }}
+                        <Tooltip
+                          contentStyle={{ 
+                            background: 'rgba(10, 14, 26, 0.95)', 
+                            border: '1px solid rgba(255,255,255,0.08)', 
+                            borderRadius: '10px',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                            fontSize: '12px',
+                            color: '#f1f5f9'
+                          }}
+                          itemStyle={{ color: '#22c55e' }}
+                          labelStyle={{ color: '#94a3b8', fontSize: '11px' }}
                         />
-                        <Line type="monotone" dataKey="price" stroke="#10b981" strokeWidth={2} dot={false} />
-                      </LineChart>
+                        <Area type="monotone" dataKey="price" stroke="#22c55e" strokeWidth={2} fill="url(#chartGradient)" dot={false} />
+                      </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
-                      Loading chart...
+                    <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">
+                      <Loader2 size={16} className="animate-spin mr-2" /> Loading chart...
                     </div>
                   )}
                 </div>
@@ -385,60 +444,61 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
                 {quoteData && (() => {
                   const sym = quoteData.currency === 'INR' ? '₹' : (quoteData.currency === 'EUR' ? '€' : (quoteData.currency === 'GBP' ? '£' : '$'));
                   return (
-                    <div className="flex items-center justify-between text-sm mt-4 pt-4 border-t border-[#2d3748]">
+                    <div className="flex items-center justify-between text-xs p-4 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                       <div>
-                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Current</p>
-                        <p className="font-bold text-slate-100 text-lg">{sym}{quoteData.regularMarketPrice?.toFixed(2)}</p>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Current</p>
+                        <p className="font-bold text-white text-base">{sym}{quoteData.regularMarketPrice?.toFixed(2)}</p>
                       </div>
-                      <div>
-                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Open</p>
-                        <p className="font-bold text-slate-100">{sym}{quoteData.regularMarketOpen?.toFixed(2)}</p>
+                      <div className="text-right">
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Open</p>
+                        <p className="font-semibold text-slate-200">{sym}{quoteData.regularMarketOpen?.toFixed(2)}</p>
                       </div>
-                      <div>
-                        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Prev Close</p>
-                        <p className="font-bold text-slate-100">{sym}{quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
+                      <div className="text-right">
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider font-semibold mb-0.5">Prev Close</p>
+                        <p className="font-semibold text-slate-200">{sym}{quoteData.regularMarketPreviousClose?.toFixed(2)}</p>
                       </div>
                     </div>
                   );
                 })()}
               </div>
 
-              <div className="border border-[#2d3748] bg-[#22252e] rounded-xl overflow-hidden shadow-lg">
-                <div className="bg-[#1e2128] p-4 border-b border-[#2d3748]">
-                  <h3 className="text-slate-100 font-bold flex items-center gap-2">
-                    <Target size={18} className="text-emerald-500" /> Trading Strategy
+              {/* Trading Strategy Card */}
+              <div className="glass-card overflow-hidden" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.02)' }}>
+                  <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                    <Target size={14} className="text-zinc-300" /> Trading Strategy
                   </h3>
                 </div>
                 
-                <div className="p-5 space-y-5">
+                <div className="p-4 space-y-4">
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Entry Point</p>
-                    <p className="text-emerald-400 font-medium bg-emerald-500/10 px-3 py-2 rounded-lg border border-emerald-500/20">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1.5">Entry Point</p>
+                    <p className="text-zinc-300 font-medium text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                       {strategy.entryPoint || 'Review current market conditions'}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Exit / Target</p>
-                    <p className="text-rose-400 font-medium bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/20">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1.5">Exit / Target</p>
+                    <p className="text-rose-400 font-medium text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.12)' }}>
                       {strategy.exitPoint || 'Set dynamic trailing stop'}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#2d3748]">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
-                      <AlertTriangle size={14} /> Short-term Strategy
+                  <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                      <AlertTriangle size={10} /> Short-term Strategy
                     </p>
-                    <p className="text-sm text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-300 leading-relaxed">
                       {strategy.shortTermStrategy || 'Hold and monitor key catalysts.'}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#2d3748]">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1">
-                      <ShieldCheck size={14} /> Long-term Strategy
+                  <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                      <ShieldCheck size={10} /> Long-term Strategy
                     </p>
-                    <p className="text-sm text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-300 leading-relaxed">
                       {strategy.longTermStrategy || 'Evaluate quarterly performance before adding to position.'}
                     </p>
                   </div>

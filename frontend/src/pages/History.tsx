@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Search, Clock, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Search, Clock, FileText, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { getSessionId } from '../lib/session';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -44,61 +44,83 @@ export default function History() {
   return (
     <div className="max-w-4xl mx-auto py-8 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors">
-          <ArrowLeft size={16} /> New Analysis
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm group">
+          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5" /> New Analysis
         </button>
-        <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-          <Clock size={24} className="text-emerald-500" /> Research History
+        <h2 className="text-xl font-bold text-white flex items-center gap-2.5 tracking-tight">
+          <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)' }}>
+            <Clock size={14} className="text-white" />
+          </div>
+          Research History
         </h2>
       </div>
 
-      <div className="bg-[#22252e] rounded-2xl shadow-lg border border-[#2d3748] overflow-hidden flex-1 flex flex-col">
+      <div className="glass-card-strong overflow-hidden flex-1 flex flex-col" style={{ boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)' }}>
         {loading ? (
-          <div className="p-12 flex justify-center flex-1 items-center"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>
+          <div className="p-12 flex justify-center flex-1 items-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="animate-spin text-zinc-400 w-8 h-8" />
+              <p className="text-sm text-slate-500">Loading history...</p>
+            </div>
+          </div>
         ) : companies.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center flex-1">
-            <Search size={48} className="text-[#2d3748] mb-4" />
-            <p className="text-lg">No past research found.</p>
+          <div className="p-12 text-center flex flex-col items-center justify-center flex-1">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-float" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Search size={28} className="text-slate-600" />
+            </div>
+            <p className="text-base font-medium text-slate-400 mb-1">No research history yet</p>
+            <p className="text-sm text-slate-600">Start your first analysis from the home page.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#2d3748] overflow-y-auto">
-            {companies.map(company => {
+          <ul className="divide-y overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+            {companies.map((company, idx) => {
               const lastRun = company.runs?.[0];
               const report = lastRun?.reports?.[0];
               
               if (!report) return null;
 
+              const isInvest = report.verdict === 'INVEST';
+
               return (
-                <li key={company.id} className="hover:bg-[#2a2d38] transition-colors">
+                <li key={company.id} className="transition-all duration-300 hover:bg-white/2" style={{ animation: `slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${idx * 50}ms both` }}>
                   <button 
                     onClick={() => navigate(`/report/${lastRun.id}`)}
-                    className="w-full text-left p-6 flex items-center justify-between"
+                    className="w-full text-left p-5 flex items-center justify-between group"
                   >
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                        {company.name}
-                        {company.ticker && <span className="text-sm font-medium px-2 py-0.5 bg-[#1a1c23] text-emerald-400 rounded border border-[#2d3748]">{company.ticker}</span>}
-                      </h3>
-                      <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
-                        <FileText size={14} /> 
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={isInvest ? { background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.12)' } : { background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.12)' }}>
+                        {isInvest ? <TrendingUp size={18} className="text-emerald-400" /> : <TrendingDown size={18} className="text-rose-400" />}
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white group-hover:text-zinc-300 transition-colors flex items-center gap-2">
+                          {company.name}
+                          {company.ticker && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-md text-zinc-300" style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+                              {company.ticker}
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                          <FileText size={11} /> 
+                          {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className={`font-bold ${report.verdict === 'INVEST' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        <p className={`text-sm font-bold ${isInvest ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {report.verdict}
                         </p>
-                        <p className="text-sm text-slate-400">
-                          {(report.confidence * 100).toFixed(0)}% Confidence
+                        <p className="text-xs text-slate-500">
+                          {(report.confidence * 100).toFixed(0)}% Conf
                         </p>
                       </div>
                       <button 
                         onClick={(e) => handleDelete(e, company.id)}
-                        className="ml-4 p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                        className="p-2 text-slate-600 hover:text-rose-400 rounded-lg transition-all hover:bg-rose-400/5"
                         title="Delete History"
                       >
-                        <Trash2 size={20} />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </button>

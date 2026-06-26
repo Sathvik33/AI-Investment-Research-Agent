@@ -4,14 +4,14 @@
 
 # AI Investment Research Agent
 
-### *A fully autonomous, multi-agent hedge fund analyst — powered by LangGraph & local LLMs*
+### *A fully autonomous, multi-agent hedge fund analyst — powered by LangGraph & Groq*
 
 <br/>
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs)
-[![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/)
+[![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -30,7 +30,7 @@
 
 **AI Investment Research Agent** is a production-grade agentic application that simulates a Wall Street research desk. Instead of a single chatbot, it deploys a **graph of specialized AI agents** — each with a distinct role — that run in parallel, debate each other, self-reflect on their confidence, and deliver a final INVEST or PASS verdict backed by deep, structured reasoning.
 
-The entire pipeline runs **100% locally** on your machine using [Ollama](https://ollama.ai/) and `qwen2.5:7b`, giving you **infinite, rate-limit-free** generations with no cloud costs — or you can plug in a [Groq](https://console.groq.com/) API key for blazing cloud-speed.
+The entire pipeline is powered by **Groq** using `llama-3.3-70b-versatile`, giving you **blazing fast** inference for near-instant, real-time analysis.
 
 ---
 
@@ -75,8 +75,7 @@ User types: "Infosys"
 | **Live Stock Chart** | Real-time price chart pulled from Yahoo Finance via `yahoo-finance2` |
 | **Multi-Currency Support** | Auto-detects INR (Rs.), EUR (Euro), GBP (GBP) for international stocks |
 | **Follow-up Chat** | Conversational Q&A backed by the full research brief as context |
-| **100% Local LLM** | Powered by Ollama + `qwen2.5:7b` — no internet, no rate limits, no API costs |
-| **Groq Cloud Mode** | Swap to `llama-3.3-70b-versatile` on Groq with a single env variable change |
+| **Blazing Fast AI** | Powered by Groq and Llama 3.3 70B for near-instant research generation |
 | **Real-time SSE Streaming** | Agent progress streams live to the frontend via Server-Sent Events |
 | **Persistent Reports** | All reports stored in PostgreSQL via Prisma — browse your full history |
 
@@ -87,7 +86,7 @@ User types: "Infosys"
 ### Backend
 - **Runtime**: Node.js + TypeScript + `ts-node-dev`
 - **AI Orchestration**: [LangGraph.js](https://github.com/langchain-ai/langgraphjs)
-- **LLM Providers**: [Ollama](https://ollama.ai/) (`qwen2.5:7b`) or [Groq](https://console.groq.com/) (`llama-3.3-70b-versatile`)
+- **LLM Provider**: [Groq](https://console.groq.com/) (`llama-3.3-70b-versatile`)
 - **Web Search**: [Tavily API](https://tavily.com/) — grounded, citation-backed search
 - **Financial Data**: `yahoo-finance2` — live price charts and fundamentals
 - **Database**: PostgreSQL (via [Neon](https://neon.tech/)) + [Prisma ORM](https://www.prisma.io/) + `pgvector`
@@ -107,7 +106,7 @@ User types: "Infosys"
 ### Prerequisites
 
 - **Node.js** v18+
-- **Ollama** — [Download here](https://ollama.ai/)
+- **Groq API Key** — [Get one free](https://console.groq.com/)
 - **PostgreSQL** database — [Neon free tier](https://neon.tech/) recommended
 - **Tavily API Key** — [Get one free](https://tavily.com/) (1,000 searches/month)
 
@@ -118,21 +117,17 @@ git clone https://github.com/Sathvik33/AI-Investment-Research-Agent.git
 cd AI-Investment-Research-Agent
 ```
 
-### 2. Pull the local AI model
 
-```bash
-ollama pull qwen2.5:7b
-```
 
-### 3. Configure the backend
+### 2. Configure the backend
 
 ```bash
 cd backend
 cp .env.example .env
-# Fill in your DATABASE_URL and TAVILY_API_KEY
+# Fill in your DATABASE_URL, TAVILY_API_KEY, and GROQ_API_KEY
 ```
 
-### 4. Install dependencies and run migrations
+### 3. Install dependencies and run migrations
 
 ```bash
 # Backend
@@ -142,7 +137,7 @@ cd backend && npm install && npx prisma migrate deploy
 cd ../frontend && npm install
 ```
 
-### 5. Launch
+### 4. Launch
 
 ```bash
 # Terminal 1
@@ -156,21 +151,7 @@ Open **http://localhost:5173** and type any company name!
 
 ---
 
-## Switching LLM Provider
 
-Edit one file: [`backend/src/graph/llm.ts`](./backend/src/graph/llm.ts)
-
-**Local Ollama (default — free, unlimited):**
-```typescript
-import { ChatOllama } from "@langchain/ollama";
-export const getLLM = () => new ChatOllama({ baseUrl: "http://localhost:11434", model: "qwen2.5:7b", temperature: 0 });
-```
-
-**Groq Cloud (fast, requires API key):**
-```typescript
-import { ChatGroq } from "@langchain/groq";
-export const getLLM = () => new ChatGroq({ apiKey: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile", temperature: 0 });
-```
 
 ---
 
@@ -197,22 +178,21 @@ export const getLLM = () => new ChatGroq({ apiKey: process.env.GROQ_API_KEY, mod
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `TAVILY_API_KEY` | Yes | Tavily web search API key |
-| `GROQ_API_KEY` | Optional | Required only for Groq cloud mode |
+| `GROQ_API_KEY` | Yes | Required for Groq fast inference |
 | `PORT` | No | Backend port (default: `4000`) |
 | `FRONTEND_ORIGIN` | No | CORS origin (default: `http://localhost:5173`) |
 
 ---
 
-## Recommended Local Models
+## 💡 Pro Tip: Local Testing vs Production
 
-| VRAM | Model | Command |
-|---|---|---|
-| 4 GB | Phi-3 Mini | `ollama pull phi3` |
-| 6 GB | Qwen 2.5 7B (Recommended) | `ollama pull qwen2.5:7b` |
-| 8 GB | Llama 3.1 8B | `ollama pull llama3.1` |
-| 16 GB+ | Qwen 2.5 14B | `ollama pull qwen2.5:14b` |
+While **Groq** provides blazing-fast inference for production, you can easily swap the LLM provider to **Ollama** during development to save on API tokens and costs. 
 
-> **Recommended:** `qwen2.5:7b` - best-in-class tool calling, JSON formatting, and reasoning in its weight class.
+To test locally:
+1. Install [Ollama](https://ollama.ai/) and run `ollama pull qwen2.5:7b` (recommended for its great tool calling and reasoning).
+2. Update `backend/src/graph/llm.ts` to use `ChatOllama` instead of `ChatGroq`.
+
+Once your prompt engineering and agents are fully tested, switch back to Groq for lightning-fast production deployments!
 
 ---
 
@@ -225,7 +205,7 @@ AI-Investment-Research-Agent/
 |   |   +-- graph/
 |   |   |   +-- nodes/          # All 10 AI agent definitions
 |   |   |   +-- graph.ts        # LangGraph pipeline definition
-|   |   |   +-- llm.ts          # LLM provider (swap Ollama <-> Groq here)
+|   |   |   +-- llm.ts          # LLM provider (Groq)
 |   |   |   +-- state.ts        # Shared state type definitions
 |   |   +-- tools/              # webSearch, webFetch, financialData, newsSearch
 |   |   +-- routes/             # Express REST + SSE endpoints
@@ -250,13 +230,13 @@ AI-Investment-Research-Agent/
 
 ## License
 
-MIT License - free for personal and commercial use.
+Apache 2.0 License - open source and free for personal and commercial use.
 
 ---
 
 <div align="center">
 
-Built with love using LangGraph, Ollama, and React
+Built with love using LangGraph, Groq, and React
 
 *Type a company. Get alpha.*
 

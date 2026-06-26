@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const DecisionSchema = z.object({
   verdict: z.enum(["INVEST", "PASS"]).describe("The final investment verdict"),
-  confidence: z.number().min(0).max(100).describe("Confidence in the verdict as a decimal between 0.0 and 1.0 (e.g. 0.85, NOT 85)"),
+  confidence: z.number().min(0).max(100).describe("Confidence in the verdict as a decimal between 0.0 and 1.0. Do NOT use whole numbers like 85. Base this strictly on the strength of the provided scores."),
   reasoning: z.string().describe("Detailed paragraph explaining the reasoning behind the verdict"),
   keyRisks: z.array(z.string()).describe("List of key risks associated with this investment"),
   keyOpportunities: z.array(z.string()).describe("List of key opportunities or bullish factors"),

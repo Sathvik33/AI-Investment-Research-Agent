@@ -3,11 +3,17 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
+// For Local Development
+
+// export const getLLM = (modelName: string = "qwen2.5:7b") => {
+//   return new ChatOllama({
+//     baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+//     model: modelName,
+//     temperature: 0.2,
+//   });
+// };
+
 export const getLLM = (modelName: string = "llama-3.3-70b-versatile") => {
-  if (!process.env.GROQ_API_KEY) {
-    console.error("GROQ_API_KEY is missing. Please add it to your .env file.");
-    return null;
-  }
   return new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
     model: modelName,
