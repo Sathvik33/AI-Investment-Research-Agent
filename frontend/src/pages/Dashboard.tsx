@@ -84,10 +84,8 @@ export default function Dashboard() {
         }
 
         setCompletedNodes(prev => new Set(prev).add(data.node));
-        
-        if (!completedNodes.has(data.node)) {
-           setActiveNode(data.node);
-        }
+        // Always update activeNode to the most recently completed node (avoids stale closure bug)
+        setActiveNode(data.node);
 
       } catch (e) {
         console.error(e);
@@ -195,7 +193,7 @@ export default function Dashboard() {
       const html2pdf = (await import('html2pdf.js')).default;
       const opt = {
         margin:       15,
-        filename:     `${reportData?.company?.ticker || 'Research'}_Report.pdf`,
+        filename:     `${reportData?.company?.ticker || reportData?.company?.name || 'Research'}_Report.pdf`,
         image:        { type: 'jpeg' as const, quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
@@ -241,7 +239,7 @@ ${report.keyRisks.map((r: string) => `- **Bear Case**: ${r}`).join('\n')}
 - **Growth Potential**: ${report.scores.growthPotential}/10
 - **Moat**: ${report.scores.moat}/10
 - **Market Sentiment**: ${report.scores.marketSentiment}/10
-- **Risk Level**: ${report.scores.riskLevel}/10
+- **Risk Level** (lower is better): ${report.scores.riskLevel}/10
 ` : null;
 
   // Find the friendly name of the active node

@@ -2,7 +2,6 @@ import { z } from "zod";
 import { ResearchState } from '../state';
 import { getLLM } from '../llm';
 import { webSearchTool } from '../../tools/webSearchTool';
-import { PrismaClient } from '@prisma/client';
 
 const EntitySchema = z.object({
   legalName: z.string().describe("The official legal name of the company"),
@@ -20,13 +19,13 @@ export const resolveEntity = async (state: ResearchState): Promise<Partial<Resea
 
   let errors: string[] = [];
   try {
-    const searchResults = await webSearchTool(`${state.companyName} company legal name ticker is public?`);
+    const searchResults = await webSearchTool(`${state.companyName} company official legal name stock ticker exchange`);
     const searchContext = searchResults.map(r => `${r.title}\n${r.content}`).join('\n\n');
 
     const llm = getLLM();
     if (!llm) {
       return { 
-        resolvedEntity: { legalName: state.companyName + " Inc.", isPublic: true, ticker: "MOCK", domain: "mock.com", industry: "Tech" } 
+        resolvedEntity: { legalName: state.companyName, isPublic: false } 
       };
     }
 

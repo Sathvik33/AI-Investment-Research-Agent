@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -36,7 +35,6 @@ router.get('/:id/reports', async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     
-    // We fetch the runs for this company that have reports
     const runs = await prisma.researchRun.findMany({
       where: { companyId: id, status: "completed" },
       include: { reports: true },
@@ -47,7 +45,6 @@ router.get('/:id/reports', async (req: Request, res: Response) => {
     res.json(reports);
   } catch (error) {
     console.error(error);
-    // Return mock empty array if DB is not ready
     res.json([]);
   }
 });

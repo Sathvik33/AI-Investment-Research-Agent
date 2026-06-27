@@ -26,7 +26,7 @@ export const newsSentimentAgent = async (state: ResearchState): Promise<Partial<
     }
 
     citations.push({
-      source: "NewsAPI",
+      source: "Yahoo Finance News",
       description: `Recent news articles for ${query}`
     });
 

@@ -30,7 +30,10 @@ export async function getCompanyReports(companyId: string) {
 export async function askFollowup(runId: string, question: string): Promise<string> {
   const res = await fetch(`${API_BASE}/research/${runId}/followup`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'x-session-id': getSessionId()
+    },
     body: JSON.stringify({ question })
   });
   if (!res.ok) throw new Error('Failed to ask followup');

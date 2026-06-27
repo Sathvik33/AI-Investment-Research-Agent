@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const DecisionSchema = z.object({
   verdict: z.enum(["INVEST", "PASS"]).describe("The final investment verdict"),
-  confidence: z.number().min(0).max(100).describe("Confidence in the verdict as a decimal between 0.0 and 1.0. Do NOT use whole numbers like 85. Base this strictly on the strength of the provided scores."),
+  confidence: z.number().min(0).max(100).describe("Confidence score between 0.0 and 1.0 (e.g. 0.82). Some models return whole numbers like 82 — that is also acceptable and will be normalized."),
   reasoning: z.string().describe("Detailed paragraph explaining the reasoning behind the verdict"),
   keyRisks: z.array(z.string()).describe("List of key risks associated with this investment"),
   keyOpportunities: z.array(z.string()).describe("List of key opportunities or bullish factors"),
@@ -33,42 +33,44 @@ export const decisionAgent = async (state: ResearchState): Promise<Partial<Resea
     };
   }
 
+  const scoresStr = state.scores
+    ? `Financial Health: ${state.scores.financialHealth}/10 | Growth: ${state.scores.growthPotential}/10 | Moat: ${state.scores.moat}/10 | Sentiment: ${state.scores.marketSentiment}/10 | Risk: ${state.scores.riskLevel}/10`
+    : "Scores not available.";
+
   const modelWithStructure = llm.withStructuredOutput(DecisionSchema, { name: "make_decision" });
-  const prompt = `You are the ultimate Risk Management Judge and Debate Facilitator for a top-tier hedge fund. Your job is to synthesize all research and scores into a final INVEST or PASS decision for ${state.resolvedEntity?.legalName || state.companyName}.
+  const prompt = `You are a senior hedge fund portfolio manager making a final INVEST or PASS decision for ${state.resolvedEntity?.legalName || state.companyName}.
 
-Research Brief:
-${state.researchBrief}
+RESEARCH BRIEF:
+${state.researchBrief || "No brief available."}
 
-Scores:
-${JSON.stringify(state.scores)}
+SCORES: ${scoresStr}
 
-Macroeconomic Context (Current Affairs, Wars, Inflation, Tech Bubbles):
-${state.macroContext || 'None provided.'}
+MACRO CONTEXT:
+${state.macroContext ? state.macroContext.substring(0, 500) : "Not provided."}
 
-CRITICAL INSTRUCTION: Your 'reasoning' field MUST be a detailed, rich Markdown string structured EXACTLY as follows:
+TASK: Write a structured investment decision. Your "reasoning" field must be a markdown string with ALL FIVE sections below. Write actual content — never write placeholder text like "[argument here]".
 
-1. Summary of Key Arguments
-Provide a debate between three personas based on the data. You MUST heavily factor in the Macroeconomic Context (adjusting risk appetite based on wars, bubbles, inflation). You MUST place the generated body of their argument on the exact same line right after the bullet point (e.g., "- **Risky Analyst**: [Their argument here]"):
-- **Risky Analyst**: (Bullish perspective, focusing on growth and momentum)
-- **Safe Analyst**: (Bearish perspective, focusing on risks, valuation, and volatility)
-- **Neutral Analyst**: (Pragmatic perspective, focusing on levels and hedges)
+## 1. Analyst Debate
+Write one or two real sentences for each perspective based on the research data above:
+- **Bull Case**: Write the strongest reason to invest, citing specific data points.
+- **Bear Case**: Write the strongest reason NOT to invest, citing specific risks.
+- **Neutral View**: Write a balanced, hedged perspective that acknowledges both sides.
 
-2. Rationale for Decision
-Explain which arguments carry the most weight based on the company's fundamentals and market environment. Why are you overriding the other concerns?
+## 2. Rationale
+In 2-3 sentences, explain which case is most compelling and why you are making this decision.
 
-3. Refined Trader's Plan (The "Calculated Move")
-Provide actionable steps such as:
-- Immediate Engagement: (e.g. Initiate X% position at current levels)
-- The Pivot Load: (Where to add more)
-- The Volatility Buffer: (Where to reserve capital for dips)
+## 3. Trade Plan
+- Entry: State where to buy (specific price range, or "at current market price")
+- Add more: State the price level to add to the position
+- Stop-loss: State the specific risk limit / exit level
 
-4. Learning from Past Mistakes
-Relate this setup to historical market traps (e.g. waiting too long for a dip, or setting stops too tight) and how this plan avoids them.
+## 4. Historical Parallel
+Name one past market situation this resembles (e.g. "Similar to Amazon's 2015 dip before AWS growth became apparent") and the lesson it teaches.
 
-5. Conclusion
-A final, punchy summary of the trade thesis.
+## 5. Final Thesis
+One punchy, memorable sentence summarizing the trade.
 
-Provide the verdict, your confidence level, this detailed markdown reasoning, key risks, opportunities, and the specific entry/exit and strategy fields requested by the schema.`;
+Fill in the schema: verdict (INVEST or PASS), confidence (0.0-1.0), the full markdown reasoning above, keyRisks (list 3), keyOpportunities (list 3), entryPoint, exitPoint, shortTermStrategy, longTermStrategy.`;
   
   try {
     const result = await modelWithStructure.invoke(prompt);

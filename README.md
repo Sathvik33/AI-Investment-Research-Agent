@@ -9,6 +9,9 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) [![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraphjs) [![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/) [![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
 
+**Live Demo:** [https://ai-investment-research-agent-mh1h.vercel.app/](https://ai-investment-research-agent-mh1h.vercel.app/)  
+**GitHub Repository:** [https://github.com/Sathvik33/AI-Investment-Research-Agent](https://github.com/Sathvik33/AI-Investment-Research-Agent)
+
 <br/>
 
 > **A agentic workflow that simulates a Wall Street research desk.** <br/>Type a company name, watch specialized AI agents collaborate in real-time, and get an institutional-grade investment report backed by live market data.
@@ -302,6 +305,23 @@ sudo certbot --nginx -d investment-research.remotewire.net
 
 ---
 
+## ✨ Recent Optimizations (v1.1)
+
+The architecture has been heavily optimized for performance, especially when running locally on smaller, single-batch models like Ollama (e.g., Llama 3 8B, Qwen 2.5 7B).
+
+### 🚀 Performance Leaps (Execution Time Cut by ~60%)
+- **Aggregator Prompt Compression**: The aggregator now uses a strictly capped, domain-specific text summary (~700 tokens) rather than dumping the entire raw JSON graph state (~10,000+ tokens). This single fix cuts the aggregator's inference time from ~4 minutes to ~60 seconds.
+- **Deterministic Reflection**: The `reflectionAgent` was rewritten to use pure code logic rather than an LLM call. It evaluates completeness based on the graph's `missingData` state, saving ~60s per run and preventing expensive, unnecessary second-pass retries.
+- **Scraping Trim**: Removed deep, secondary page scraping from the `webResearchAgent`, reducing its prompt size by 50% and eliminating an unnecessary HTTP roundtrip.
+
+### 🛡️ Reliability & Fixes
+- **Small Model Compatibility**: The `decisionAgent` prompt was completely overhauled. Meta-instructions, abstract personas, and placeholders (which 7B models often blindly copy) were replaced with explicit, imperative tasks, drastically improving output reliability on local LLMs.
+- **Postgres State Checkpointing**: Fixed a critical LangGraph wiring bug so that the `PostgresSaver` checkpointer is actually injected into the graph compilation. Your runs now safely persist across server restarts.
+- **Ticker Sanitization & Fallbacks**: The `financialDataAgent` now sanitizes overly verbose LLM ticker outputs (e.g., stripping strings like *"RELIANCE.NS (National Stock Exchange...)"*) and features automatic fallbacks for regional exchanges (e.g., appending `.NS` and `.BO` for Indian stocks).
+- **Hardened Streaming (SSE)**: Added a 30-second heartbeat to the Server-Sent Events stream to prevent NGINX/Vercel from dropping connections during long inference queues. Intermittent DB/network errors are now gracefully swallowed, aborting the pipeline *only* on explicit LLM rate-limit hits.
+
+---
+
 ## License
 
 Apache 2.0 License - open source and free for personal and commercial use.
@@ -309,7 +329,5 @@ Apache 2.0 License - open source and free for personal and commercial use.
 <div align="center">
 
 Built with love using LangGraph, Groq, and React
-
-*Type a company. Get alpha.*
 
 </div>

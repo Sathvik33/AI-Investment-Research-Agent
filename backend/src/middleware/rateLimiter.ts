@@ -37,3 +37,13 @@ export const rateLimiter = (req: Request, res: Response, next: NextFunction) => 
 
   next();
 };
+
+// Periodically clean up expired entries to prevent memory leak on long-running servers
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, data] of requestCounts.entries()) {
+    if (now > data.resetTime) {
+      requestCounts.delete(key);
+    }
+  }
+}, 5 * 60 * 1000); // Every 5 minutes

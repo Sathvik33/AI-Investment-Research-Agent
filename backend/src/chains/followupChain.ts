@@ -1,13 +1,11 @@
 import { getLLM } from '../graph/llm';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma';
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { webSearchTool } from '../tools/webSearchTool';
 import { financialDataTool } from '../tools/financialDataTool';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-
-const prisma = new PrismaClient();
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 
 const searchWeb = tool(async ({ query }) => {
   const res = await webSearchTool(query, 3);
@@ -47,9 +45,12 @@ export async function runFollowupChain(runId: string, question: string): Promise
     const report = run?.reports[0];
     const brief = report ? report.reasoning : "No research brief found.";
     
-    // Format message history
-    const history = (run?.messages || [])
-      .map(m => new HumanMessage(`${m.role.toUpperCase()}: ${m.content}`));
+    // Build message history with correct role types (AIMessage for assistant turns)
+    const history = (run?.messages || []).map(m =>
+      m.role === 'assistant'
+        ? new AIMessage(m.content)
+        : new HumanMessage(m.content)
+    );
 
     const systemPrompt = `You are an AI Investment Research Agent. You just produced a report with the following reasoning:
 ${brief}

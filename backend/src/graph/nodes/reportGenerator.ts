@@ -1,8 +1,17 @@
 import { ResearchState } from '../state';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../db/prisma';
 import { RunnableConfig } from "@langchain/core/runnables";
 
-const prisma = new PrismaClient();
+/**
+ * Maps finding sourceType values to substrings of their corresponding citation source names.
+ * Used to correctly associate citations with their source finding type when persisting to DB.
+ */
+const CITATION_SOURCE_MAP: Record<string, string[]> = {
+  "web":         ["web search"],
+  "financials":  ["yahoo finance"],
+  "news":        ["yahoo finance news"],
+  "competitors": ["competitors"]
+};
 
 export const reportGenerator = async (state: ResearchState, config?: RunnableConfig): Promise<Partial<ResearchState>> => {
   console.log('Running reportGenerator...');
@@ -45,22 +54,27 @@ export const reportGenerator = async (state: ResearchState, config?: RunnableCon
       });
     }
 
-    // 3. Persist Findings
+    // 3. Persist Findings — filter citations by matching source name to finding type
     const findingsData = [
-      { type: "web", data: state.webResearch },
-      { type: "financials", data: state.financials },
-      { type: "news", data: state.newsSentiment },
+      { type: "web",         data: state.webResearch },
+      { type: "financials",  data: state.financials },
+      { type: "news",        data: state.newsSentiment },
       { type: "competitors", data: state.competitiveLandscape }
     ];
 
     for (const item of findingsData) {
       if (item.data) {
+        const matchTerms = CITATION_SOURCE_MAP[item.type] || [item.type];
+        const citationsForType = state.citations.filter(c =>
+          matchTerms.some(term => c.source.toLowerCase().includes(term))
+        );
+
         await prisma.researchFinding.create({
           data: {
             runId,
             sourceType: item.type,
             payload: item.data as any,
-            citations: state.citations.filter(c => c.source.toLowerCase().includes(item.type)) as any
+            citations: citationsForType as any
           }
         });
       }

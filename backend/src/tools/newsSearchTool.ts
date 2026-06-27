@@ -1,8 +1,22 @@
-import { NewsFindings } from "../graph/state";
 import YF from 'yahoo-finance2';
 
-const yahooFinance = new (YF as any)({ suppressNotices: ['yahooSurvey'] });
+const customLogger = {
+  ...console,
+  warn: (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Unsupported environment')) return;
+    console.warn(...args);
+  }
+};
+const yahooFinance = new (YF as any)({ 
+  suppressNotices: ['yahooSurvey', 'ripHistorical'],
+  logger: customLogger 
+});
 
+/**
+ * Fetches recent news articles for a given company/query from Yahoo Finance.
+ * Returns an empty array on failure — callers should treat this as missing data
+ * rather than substituting fabricated content.
+ */
 export async function newsSearchTool(query: string): Promise<string[]> {
   try {
     const results = await yahooFinance.search(query, { newsCount: 5 }) as any;
@@ -17,11 +31,6 @@ export async function newsSearchTool(query: string): Promise<string[]> {
     );
   } catch (error: any) {
     console.error(`Error fetching news for ${query}:`, error.message);
-    console.warn("Falling back to mocked news data due to API error.");
-    return [
-      `Recent news about ${query} suggests positive growth.`,
-      `${query} announced a new product line recently.`,
-      `Market analysts are optimistic about ${query}'s future.`
-    ];
+    return [];
   }
 }

@@ -77,7 +77,22 @@ export default function History() {
               const lastRun = company.runs?.[0];
               const report = lastRun?.reports?.[0];
               
-              if (!report) return null;
+              if (!report) {
+                const isRunning = lastRun?.status === 'running';
+                return (
+                  <li key={company.id} className="transition-all duration-300" style={{ animation: `slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${idx * 50}ms both` }}>
+                    <div className="p-5 flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <Loader2 size={18} className={`text-slate-500 ${isRunning ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-400">{company.name}</h3>
+                        <p className="text-xs text-slate-600 mt-0.5">{isRunning ? 'Analysis in progress...' : 'Analysis failed or incomplete'}</p>
+                      </div>
+                    </div>
+                  </li>
+                );
+              }
 
               const isInvest = report.verdict === 'INVEST';
 

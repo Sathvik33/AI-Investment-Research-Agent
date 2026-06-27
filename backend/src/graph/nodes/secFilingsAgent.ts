@@ -4,11 +4,16 @@ import { webSearchTool } from '../../tools/webSearchTool';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 
 export async function secFilingsAgent(state: ResearchState): Promise<Partial<ResearchState>> {
-  const llm = getLLM();
   const company = state.resolvedEntity;
 
   if (!company || !company.isPublic || !company.legalName) {
     return { secFilings: "N/A - Not a public company or could not resolve legal name." };
+  }
+
+  // Check LLM availability BEFORE making any expensive network calls
+  const llm = getLLM();
+  if (!llm) {
+    return { secFilings: "Mock SEC Filings:\n- Risk: Regulatory changes\n- Risk: Macroeconomic headwinds" };
   }
 
   try {
@@ -28,10 +33,6 @@ Search Results:
 ${context}
 
 Provide a concise, bulleted summary of the most critical regulatory, market, or operational risks disclosed by the company.`;
-
-    if (!llm) {
-      return { secFilings: "Mock SEC Filings:\n- Risk: Regulatory changes\n- Risk: Macroeconomic headwinds" };
-    }
 
     const response = await llm.invoke([
       new SystemMessage("You are an expert financial auditor."),

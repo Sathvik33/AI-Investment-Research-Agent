@@ -19,7 +19,7 @@ export const financialDataAgent = async (state: ResearchState): Promise<Partial<
     
     if (financials.isApplicable) {
        citations.push({
-         source: "Alpha Vantage",
+         source: "Yahoo Finance",
          description: `Financial data for ${state.resolvedEntity.ticker}`
        });
     } else {

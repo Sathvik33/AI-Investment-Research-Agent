@@ -1,5 +1,6 @@
 import { ChatGroq } from "@langchain/groq";
 import * as dotenv from "dotenv";
+// import { ChatOllama } from "@langchain/ollama";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ dotenv.config();
 //   });
 // };
 
+// For Production
 export const getLLM = (modelName: string = "llama-3.3-70b-versatile") => {
   return new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,

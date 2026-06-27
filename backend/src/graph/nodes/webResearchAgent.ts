@@ -17,15 +17,15 @@ export const webResearchAgent = async (state: ResearchState): Promise<Partial<Re
   try {
     const query = `${state.resolvedEntity?.legalName || state.companyName} company overview recent developments`;
     const searchResults = await webSearchTool(query, 3);
-    
+
     let combinedText = searchResults.map(r => r.content).join('\n\n');
-    
+
     // Also try to scrape the first result if it seems promising
     if (searchResults.length > 0 && searchResults[0].url) {
-       const pageContent = await webFetchTool(searchResults[0].url);
-       if (pageContent.length > 100) {
-         combinedText += `\n\nPage Content (${searchResults[0].url}):\n${pageContent.substring(0, 3000)}`;
-       }
+      const pageContent = await webFetchTool(searchResults[0].url);
+      if (pageContent.length > 100) {
+        combinedText += `\n\nPage Content (${searchResults[0].url}):\n${pageContent.substring(0, 3000)}`;
+      }
     }
 
     const citations = searchResults.map(r => ({
@@ -36,18 +36,18 @@ export const webResearchAgent = async (state: ResearchState): Promise<Partial<Re
 
     const llm = getLLM();
     if (!llm) {
-      return { 
+      return {
         webResearch: { summary: "Mock summary", recentDevelopments: ["Mock dev"] },
-        citations 
+        citations
       };
     }
 
     const modelWithStructure = llm.withStructuredOutput(WebResearchSchema, { name: "web_research" });
     const prompt = `Based on the following web research for ${state.resolvedEntity?.legalName || state.companyName}, extract a concise business summary and a list of recent developments.\n\nResearch Data:\n${combinedText}`;
-    
+
     const result = await modelWithStructure.invoke(prompt);
-    
-    return { 
+
+    return {
       webResearch: result,
       citations
     };

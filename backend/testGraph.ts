@@ -1,7 +1,8 @@
-import { graph } from './src/graph/graph';
+import { getGraph } from './src/graph/graph';
 
 async function main() {
   console.log("Starting linear graph execution...");
+  const graph = await getGraph();
   const finalState = await graph.invoke({ companyName: "TestCompany" });
   console.log("Execution complete!");
   console.log("Final verdict:", finalState.decision?.verdict);

@@ -12,6 +12,7 @@ import { analystAgent } from "./nodes/analystAgent";
 import { reflectionAgent } from "./nodes/reflectionAgent";
 import { decisionAgent } from "./nodes/decisionAgent";
 import { reportGenerator } from "./nodes/reportGenerator";
+import { getCheckpointer } from "../db/checkpointer";
 
 function routeAfterReflection(state: ResearchState): string {
   if (state.iterationCount >= 2) return "decisionAgent";
@@ -63,4 +64,24 @@ const builder = new StateGraph(ResearchStateAnnotation)
   .addEdge("decisionAgent", "reportGenerator")
   .addEdge("reportGenerator", END);
 
-export const graph = builder.compile();
+/**
+ * Lazy-compiled graph singleton.
+ * On first call, attempts to compile WITH the PostgreSQL checkpointer for state persistence.
+ * Falls back to an in-memory (no-persistence) compile if the DB is unavailable.
+ */
+let _graph: ReturnType<typeof builder.compile> | null = null;
+
+export const getGraph = async (): Promise<ReturnType<typeof builder.compile>> => {
+  if (_graph) return _graph;
+
+  try {
+    const checkpointer = await getCheckpointer();
+    _graph = builder.compile({ checkpointer });
+    console.log("Graph compiled with PostgreSQL checkpointer.");
+  } catch (e) {
+    console.warn("Checkpointer unavailable — compiling graph without state persistence:", e);
+    _graph = builder.compile();
+  }
+
+  return _graph;
+};

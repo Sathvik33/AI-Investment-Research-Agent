@@ -38,6 +38,7 @@ model ResearchRun {
   messages     Message[]
   embeddings   ReportEmbedding[]
 
+  @@index([sessionId])
   @@map("research_runs")
 }
 

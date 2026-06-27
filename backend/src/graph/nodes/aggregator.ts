@@ -8,7 +8,7 @@ const AggregatorSchema = z.object({
 
 export const aggregator = async (state: ResearchState): Promise<Partial<ResearchState>> => {
   console.log('Running aggregator...');
-  
+
   const allData = {
     webResearch: state.webResearch,
     financials: state.financials,
@@ -25,7 +25,7 @@ export const aggregator = async (state: ResearchState): Promise<Partial<Research
 
   const modelWithStructure = llm.withStructuredOutput(AggregatorSchema, { name: "aggregate_research" });
   const prompt = `You are a financial analyst. Synthesize the following raw data points into a cohesive, deduplicated research brief for ${state.resolvedEntity?.legalName || state.companyName}. Do not hallucinate data that is not provided.\n\nRaw Data:\n${JSON.stringify(allData, null, 2)}`;
-  
+
   try {
     const result = await modelWithStructure.invoke(prompt);
     return { researchBrief: result.researchBrief };
