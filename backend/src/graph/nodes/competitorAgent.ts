@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const CompetitorSchema = z.object({
   marketPosition: z.string().describe("The company's market position or niche"),
-  keyCompetitors: z.array(z.string()).describe("List of key competitors")
+  keyCompetitors: z.string().describe("Comma-separated list of key competitors (output as a string, e.g. 'Company A, Company B')")
 });
 
 export const competitorAgent = async (state: ResearchState): Promise<Partial<ResearchState>> => {
@@ -36,10 +36,26 @@ export const competitorAgent = async (state: ResearchState): Promise<Partial<Res
     const modelWithStructure = llm.withStructuredOutput(CompetitorSchema, { name: "competitor_analysis" });
     const prompt = `Based on the following web research for ${state.resolvedEntity?.legalName || state.companyName}, identify its market position and key competitors.\n\nResearch Data:\n${combinedText}`;
     
-    const result = await modelWithStructure.invoke(prompt);
+    const rawResult = await modelWithStructure.invoke(prompt);
+    
+    let competitorsList: string[] = [];
+    const rawCompetitors = rawResult.keyCompetitors.trim();
+    
+    if (rawCompetitors.startsWith('[')) {
+       try {
+         competitorsList = JSON.parse(rawCompetitors);
+       } catch {
+         competitorsList = rawCompetitors.replace(/[\[\]"]/g, '').split(',').map((c: string) => c.trim());
+       }
+    } else {
+       competitorsList = rawCompetitors.split(',').map((c: string) => c.trim());
+    }
     
     return { 
-      competitiveLandscape: result,
+      competitiveLandscape: {
+        marketPosition: rawResult.marketPosition,
+        keyCompetitors: competitorsList
+      },
       citations
     };
   } catch (error: any) {

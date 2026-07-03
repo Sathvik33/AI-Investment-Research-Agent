@@ -183,10 +183,45 @@ export default function Dashboard() {
     
     setIsDownloading(true);
     
-    const originalClassName = element.className;
-    // Temporarily switch to white theme for the capture
-    element.className = "bg-white text-black p-8 prose max-w-none";
-    element.style.color = '#000000';
+    // Create a standalone HTML structure
+    const printDiv = document.createElement('div');
+    printDiv.style.width = '800px'; // fixed width for consistent PDF wrapping
+    printDiv.style.padding = '20px';
+    printDiv.style.backgroundColor = '#ffffff';
+    printDiv.style.color = '#000000';
+    printDiv.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    
+    // Inject structured CSS
+    const style = document.createElement('style');
+    style.innerHTML = `
+      h1, h2, h3 { color: #111827; margin-top: 24px; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+      h2 { font-size: 18px; }
+      p { color: #374151; line-height: 1.6; margin-bottom: 16px; font-size: 13px; }
+      ul { margin-bottom: 16px; padding-left: 24px; }
+      li { color: #374151; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+      strong { color: #111827; font-weight: 600; }
+    `;
+    printDiv.appendChild(style);
+
+    // Build the report header
+    const headerDiv = document.createElement('div');
+    const isInvest = report?.verdict === 'INVEST';
+    headerDiv.innerHTML = `
+      <div style="margin-bottom: 30px; border-bottom: 2px solid #10b981; padding-bottom: 20px;">
+        <h1 style="font-size: 24px; margin: 0 0 8px 0; border: none;">${reportData?.company?.name || 'Investment'} Research Report</h1>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Ticker: ${reportData?.company?.ticker || 'N/A'}</p>
+        <div style="margin-top: 20px; padding: 15px; background: ${isInvest ? '#ecfdf5' : '#fef2f2'}; border-radius: 8px; border: 1px solid ${isInvest ? '#a7f3d0' : '#fecaca'};">
+          <h2 style="margin: 0; border: none; font-size: 20px; color: ${isInvest ? '#059669' : '#dc2626'};">Verdict: ${report?.verdict}</h2>
+          <p style="margin: 5px 0 0 0; color: #374151; font-size: 14px; font-weight: 600;">Confidence: ${(report?.confidence * 100).toFixed(0)}%</p>
+        </div>
+      </div>
+    `;
+    printDiv.appendChild(headerDiv);
+
+    // Append the markdown HTML
+    const contentDiv = document.createElement('div');
+    contentDiv.innerHTML = element.innerHTML;
+    printDiv.appendChild(contentDiv);
 
     try {
       // @ts-ignore
@@ -195,16 +230,15 @@ export default function Dashboard() {
         margin:       15,
         filename:     `${reportData?.company?.ticker || reportData?.company?.name || 'Research'}_Report.pdf`,
         image:        { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
-      await html2pdf().set(opt).from(element).save();
+      
+      // Pass the raw HTML string instead of a hidden DOM element
+      await html2pdf().set(opt).from(printDiv.outerHTML).save();
     } catch (err) {
       console.error("PDF download failed", err);
     } finally {
-      // Restore the dark theme
-      element.className = originalClassName;
-      element.style.color = '';
       setIsDownloading(false);
     }
   };

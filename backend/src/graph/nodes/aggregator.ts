@@ -23,12 +23,17 @@ export const aggregator = async (state: ResearchState): Promise<Partial<Research
     return { researchBrief: "Mock aggregated research brief containing all details." };
   }
 
-  const modelWithStructure = llm.withStructuredOutput(AggregatorSchema, { name: "aggregate_research" });
-  const prompt = `You are a financial analyst. Synthesize the following raw data points into a cohesive, deduplicated research brief for ${state.resolvedEntity?.legalName || state.companyName}. Do not hallucinate data that is not provided.\n\nRaw Data:\n${JSON.stringify(allData, null, 2)}`;
+  const prompt = `You are a financial analyst. Synthesize the following raw data points into a cohesive, deduplicated research brief for ${state.resolvedEntity?.legalName || state.companyName}. Do not hallucinate data that is not provided.
+
+Raw Data:
+${JSON.stringify(allData, null, 2)}
+
+IMPORTANT: Output ONLY the research brief text. Do not output JSON, introductory phrases, or markdown blocks. Just the plain text brief.`;
 
   try {
-    const result = await modelWithStructure.invoke(prompt);
-    return { researchBrief: result.researchBrief };
+    const result = await llm.invoke(prompt);
+    const textContent = typeof result.content === 'string' ? result.content : JSON.stringify(result.content);
+    return { researchBrief: textContent };
   } catch (error: any) {
     console.error("Error in aggregator:", error);
     return { errors: [`aggregator failed: ${error.message}`] };

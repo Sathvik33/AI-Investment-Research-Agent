@@ -8,14 +8,12 @@ const EntitySchema = z.object({
   domain: z.string().optional().describe("The primary website domain of the company, if known"),
   ticker: z.string().optional().describe("The stock ticker symbol if it is a public company, otherwise leave undefined"),
   industry: z.string().optional().describe("The primary industry the company operates in"),
-  isPublic: z.union([z.boolean(), z.string()])
-    .transform(val => {
-      if (typeof val === "string") {
-        return val.toLowerCase() === "true";
-      }
-      return val;
-    })
-    .describe("Whether the company is publicly traded on a stock exchange in boolean value")
+  isPublic: z.union([z.boolean(), z.string()]).transform(val => {
+    if (typeof val === "string") {
+      return val.toLowerCase() === "true";
+    }
+    return val;
+  })
 });
 export const resolveEntity = async (state: ResearchState): Promise<Partial<ResearchState>> => {
   console.log('Running resolveEntity for:', state.companyName);
@@ -39,7 +37,6 @@ export const resolveEntity = async (state: ResearchState): Promise<Partial<Resea
     
     let result = await modelWithStructure.invoke(prompt);
 
-    // 🔧 Normalize isPublic if it came back as a string
     if (typeof result.isPublic === "string") {
       result.isPublic = result.isPublic.toLowerCase() === "true";
     }

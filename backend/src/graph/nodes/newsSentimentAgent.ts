@@ -4,7 +4,7 @@ import { getLLM } from '../llm';
 import { z } from "zod";
 
 const SentimentSchema = z.object({
-  sentimentScore: z.number().min(0).max(1).describe("Sentiment score from 0 (very negative) to 1 (very positive).")
+  sentimentScore: z.string().describe("Sentiment score from 0 (very negative) to 1 (very positive). Output as a string, e.g. '0.75'")
 });
 
 export const newsSentimentAgent = async (state: ResearchState): Promise<Partial<ResearchState>> => {
@@ -43,10 +43,13 @@ export const newsSentimentAgent = async (state: ResearchState): Promise<Partial<
     
     const result = await modelWithStructure.invoke(prompt);
     
+    let parsedScore = parseFloat(result.sentimentScore);
+    if (isNaN(parsedScore)) parsedScore = 0.5;
+    
     return { 
       newsSentiment: {
         articles,
-        sentimentScore: result.sentimentScore
+        sentimentScore: parsedScore
       },
       citations
     };

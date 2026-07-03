@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const DecisionSchema = z.object({
   verdict: z.enum(["INVEST", "PASS"]).describe("The final investment verdict"),
-  confidence: z.number().min(0).max(100).describe("Confidence score between 0.0 and 1.0 (e.g. 0.82). Some models return whole numbers like 82 — that is also acceptable and will be normalized."),
+  confidence: z.string().describe("Confidence score between 0.0 and 1.0 (output as string, e.g. '0.82')"),
   reasoning: z.string().describe("Detailed paragraph explaining the reasoning behind the verdict"),
   keyRisks: z.array(z.string()).describe("List of key risks associated with this investment"),
   keyOpportunities: z.array(z.string()).describe("List of key opportunities or bullish factors"),
@@ -70,13 +70,22 @@ Name one past market situation this resembles (e.g. "Similar to Amazon's 2015 di
 ## 5. Final Thesis
 One punchy, memorable sentence summarizing the trade.
 
-Fill in the schema: verdict (INVEST or PASS), confidence (0.0-1.0), the full markdown reasoning above, keyRisks (list 3), keyOpportunities (list 3), entryPoint, exitPoint, shortTermStrategy, longTermStrategy.`;
+Fill in the schema: verdict (INVEST or PASS), confidence (0.0-1.0 string), the full markdown reasoning above, keyRisks (list 3), keyOpportunities (list 3), entryPoint, exitPoint, shortTermStrategy, longTermStrategy.`;
   
   try {
-    const result = await modelWithStructure.invoke(prompt);
-    if (result.confidence > 1) {
-      result.confidence = result.confidence / 100;
+    const rawResult = await modelWithStructure.invoke(prompt);
+    
+    let conf = parseFloat(rawResult.confidence);
+    if (isNaN(conf)) conf = 0.5;
+    if (conf > 1) {
+      conf = conf / 100;
     }
+    
+    const result = {
+      ...rawResult,
+      confidence: conf
+    };
+    
     return { decision: result };
   } catch (error: any) {
     console.error("Error in decisionAgent:", error);
