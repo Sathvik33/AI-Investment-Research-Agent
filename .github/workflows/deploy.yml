@@ -51,6 +51,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,ENV_FILE_CONTENT
           script: |
+            # Clean up old unused docker images and containers to free up disk space
+            sudo docker system prune -af --volumes
+            
             # Create the .env file securely on the server
             echo "$ENV_FILE_CONTENT" > /home/ubuntu/.env
             
