@@ -15,7 +15,7 @@ dotenv.config();
 // };
 
 // For Production
-export const getLLM = (modelName: string = "llama-3.3-70b-versatile") => {
+export const getLLM = (modelName: string = "openai/gpt-oss-120b") => {
   return new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
     model: modelName,
