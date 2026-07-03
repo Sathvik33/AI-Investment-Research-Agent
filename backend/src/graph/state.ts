@@ -38,7 +38,7 @@ export const ResearchStateAnnotation = Annotation.Root({
     domain?: string;
     ticker?: string;
     industry?: string;
-    isPublic: boolean;
+    isPublic: boolean | string;
   } | undefined>({
     reducer: (x, y) => y ?? x,
     default: () => undefined,
