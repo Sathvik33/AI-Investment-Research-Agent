@@ -15,7 +15,7 @@ dotenv.config();
 // };
 
 // For Production
-export const getLLM = (modelName: string = "meta-llama/llama-4-scout-17b-16e-instruct") => {
+export const getLLM = (modelName: string = "llama-3.3-70b-versatile") => {
   return new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
     model: modelName,
